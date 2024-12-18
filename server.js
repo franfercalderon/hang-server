@@ -9,7 +9,7 @@ const userRoutes = require('./routes/userRoutes')
 const slotRoutes = require('./routes/slotRoutes')
 const friendRoutes = require('./routes/friendRoutes')
 const adminRoutes = require('./routes/adminRoutes')
-
+const notificationRoutes = require('./routes/notificationsRoutes')
 
 //APP
 const app = express();
@@ -22,6 +22,7 @@ app.use('/admin', adminRoutes )
 app.use('/users', userRoutes )
 app.use('/slots', slotRoutes )
 app.use('/friends', friendRoutes )
+app.use('/notifications', notificationRoutes )
 
 app.get('/', ( req, res ) => {
     res.status(200).json({ message: 'Testo Bueno' })

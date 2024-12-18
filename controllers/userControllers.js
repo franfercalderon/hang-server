@@ -1,5 +1,4 @@
-const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocByDocRef, updateUserClaims, deleteAuthUser, getDocIdWithCondition } = require("../services/firebaseServices")
-const { v4 } = require('uuid') 
+const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition } = require("../services/firebaseServices")
 
 const handleInvitedUser = async ( req, res ) => {
 
@@ -152,37 +151,6 @@ const getUser = async ( req, res ) => {
     }
 }
 
-// const testClaims = async ( req, res ) => {
-//     try {
-//         const { userId, claim } = req.body
-//         await updateUserClaims( userId, claim )
-//         console.log('claim updated');
-//         res.status(200)
-//     } catch (error) {
-//         console.error(error)
-//         res.status(400)
-//         throw error
-//     }
-// }
-
-// const updateUserPermissions = async ( req, res ) => {
-//     try {
-//         const { master, userId } = req.body
-//         if( !master || !userId ) {
-//             return res.status( 400 ).json( { message: 'User data is required in request body.' } ) 
-//         }
-//         const claim = { master: master }
-//         await updateUserClaims( userId, claim )
-//         // const docRef = await getDocIdWithCondition( 'users', 'id', userId )
-//         await updateDocPropertyById( 'users', docRef, 'isAdmin', admin ) 
-//         res.status( 200 ).json( { message: 'User permissions updated.' } )
-        
-//     } catch ( error ) {
-//         console.error( error )
-//         res.status( 500 ).json( { message: 'Internal server error.' } )
-//     }
-// }  
-
 
 module.exports = {
     handleMasterUser,
@@ -190,5 +158,4 @@ module.exports = {
     getUser,
     updateUser,
     updateUserWithAuth,
-
 }

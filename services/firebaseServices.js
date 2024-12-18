@@ -9,7 +9,7 @@ const createDocumentInCollection = async ( collection, data ) => {
 
     } catch ( error ) {
         if( error instanceof Error ){
-            console.error(`error: ${ error.message }`)
+            console.error(`error: ${ error.message }`) 
         }
         throw error
     }
@@ -124,22 +124,6 @@ const getDocAndIdWithCondition = async ( collection, existingValue, searchValue 
     }
 }
 
-
-const updateUserClaims = async ( userId, claim ) => {
-    try {
-        console.log(userId, claim);
-        const userUid = await getDocIdWithCondition( 'users', 'id', userId )
-        console.log(userUid);
-        console.log('userUid ya paso');
-        await admin.auth().setCustomUserClaims( userUid, claim )
-    } catch (error) {
-        if(error instanceof Error){
-            console.error(`error: ${error.message}`)
-        }
-        throw error
-    }
-}
-
 const deleteDocById = async ( collection, docId ) => {
     try {
         const docRef = db.collection( collection ).doc( docId )
@@ -176,7 +160,6 @@ const getAllDocsFromCollection = async ( collection ) => {
 }
 
 const updateDocArrayById = async ( collection, docId, updateProperty, updateValue ) => {
-    console.log(updateValue);
 
     try {
         const docRef = db.collection( collection ).doc( docId )
@@ -201,19 +184,9 @@ module.exports = {
     getDocsWhereCondition,
     getDocByDocRef,
     deleteAuthUser,
-    updateUserClaims,
     getDocIdWithCondition,
     deleteDocById,
     getAllDocsFromCollection,
     getDocAndIdWithCondition,
     updateDocArrayById
-    
-    // getDocRefByProperty
-    // getDocsWhereCondition,
-    // getDocByDocRef,
-    // getDocsWithIdWhereCondition,
-    // updateDocArrayById,
-    // updateDocPropertyById,
-    // getAllDocsFromCollection,
-    // updateUserClaims
 }
