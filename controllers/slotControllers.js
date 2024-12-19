@@ -17,9 +17,7 @@ const postFixedSlot = async ( req, res ) => {
         const docId = await createDocumentInCollection( 'fixedSlots', slot )
 
         if( docId ) {
-            console.log('docId');
             res.status( 201 ).json( docId )
-            console.log('llega?');
 
             matchRecurringSlots( userId, slot ).catch( error => {
 
@@ -326,16 +324,17 @@ const findRecurringSlotsMatches = ( userSlot, friendSlots ) => {
 }
 
 const matchRecurringSlots = async ( userId, newSlot ) => {
-    console.log('corre');
 
     const userFriends = await getDocsWhereCondition( 'users', 'id', userId )
 
     const matches = []
 
     if( userFriends.length > 0 ){
+        console.log(userFriends);
 
         for ( const friend of userFriends ){
-    
+
+            console.log(friend);
             const friendRecurringSlots = await getDocsWhereCondition( 'fixedSlots', 'userId', friend.id )
             if ( friendRecurringSlots.length > 0 ){
                 
