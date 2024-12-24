@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { handleInvitedUser, updateUser, getUser, updateUserWithAuth } = require("../controllers/userControllers")
+const { handleInvitedUser, updateUser, getUser, updateUserWithAuth, updateUser2 } = require("../controllers/userControllers")
 const { getFriendSuggestions } = require( "../controllers/friendControllers" )
 const invite = require('../middleware/invite')
 const auth = require('../middleware/auth')
@@ -14,8 +14,9 @@ router.get('/explore', auth, getFriendSuggestions )
 router.post('/', masterUser, invite, handleInvitedUser )
 
 //PATCH
-router.patch('/:id', updateUser )
+router.patch('/:id', auth, updateUser )
 router.patch('/', auth, updateUserWithAuth )
+
 
 
 module.exports = router

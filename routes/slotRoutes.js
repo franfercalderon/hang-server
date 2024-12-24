@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { postFixedSlot, postAvailableNowSlot, postScheduledSlot, getUserFixedSlots, deleteFixedSlot, getAvailableNowSlots, getScheduledSlots, addNewAttendant } = require( "../controllers/slotControllers" )
+const { postFixedSlot, postAvailableNowSlot, postScheduledSlot, getUserFixedSlots, deleteFixedSlot, getAvailableNowSlots, getScheduledSlots, addNewAttendant, getFixedMatches } = require( "../controllers/slotControllers" )
 const auth = require( '../middleware/auth' )
 const checkSpots = require('../middleware/checkSpots')
 const checkAttending = require('../middleware/checkAttending')
@@ -9,6 +9,8 @@ const checkAttending = require('../middleware/checkAttending')
 router.get( '/fixed/user/:id', getUserFixedSlots )
 router.get( '/now', auth, getAvailableNowSlots )
 router.get( '/scheduled', auth, getScheduledSlots )
+router.get( '/matches/fixed', auth, getFixedMatches )
+
 
 //POST
 router.post( '/fixed', auth, postFixedSlot )

@@ -1,4 +1,4 @@
-const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition } = require("../services/firebaseServices")
+const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, updateUserClaims } = require("../services/firebaseServices")
 
 const handleInvitedUser = async ( req, res ) => {
 
@@ -152,10 +152,29 @@ const getUser = async ( req, res ) => {
 }
 
 
+// const updateUser2 = async ( req, res ) => {
+//     try {
+//         const data = req.body
+//         const userId = req.params.id
+//         if( !data || Object.keys( data ).length === 0 ) {
+//             return res.status( 400 ).json( { message: 'User data is required in request body.' } ) 
+//         } else if( !userId ){
+//             return res.status( 400 ).json( { message: 'DocId is required in request params.' } ) 
+//         }
+
+//         await updateUserClaims( userId, data )
+//         res.status( 200 ).json( { message: 'User updated.' } )
+//     } catch ( error ) {
+//         console.error( error )
+//         res.status( 500 ).json( { message: 'Internal server error.' } )
+//     }
+// } 
+
 module.exports = {
     handleMasterUser,
     handleInvitedUser,
     getUser,
     updateUser,
     updateUserWithAuth,
+    // updateUser2
 }

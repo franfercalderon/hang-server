@@ -149,7 +149,7 @@ const getAvailableNowSlots = async ( req, res ) => {
                 res.status( 400 ).json( { message: 'Could not get friends activity.' } )
             }
         } else {
-            res.status( 400 ).json( { message: 'Could not user.' } )
+            res.status( 400 ).json( { message: 'Could not find user.' } )
         }
     } catch ( error ) {
         console.error( error )
@@ -192,7 +192,7 @@ const getScheduledSlots = async ( req, res ) => {
                 res.status( 400 ).json( { message: 'Could not get friends activity.' } )
             }
         } else {
-            res.status( 400 ).json( { message: 'Could not user.' } )
+            res.status( 400 ).json( { message: 'Could not find user.' } )
         }
     } catch ( error ) {
         console.error( error )
@@ -325,16 +325,17 @@ const findRecurringSlotsMatches = ( userSlot, friendSlots ) => {
 
 const matchRecurringSlots = async ( userId, newSlot ) => {
 
-    const userFriends = await getDocsWhereCondition( 'users', 'id', userId )
+    const userResponse = await getDocsWhereCondition( 'users', 'id', userId )
 
     const matches = []
 
-    if( userFriends.length > 0 ){
-        console.log(userFriends);
+    if( userResponse.length > 0 ){
+
+        const user = userResponse[ 0 ]
+        const userFriends = user.friends
 
         for ( const friend of userFriends ){
 
-            console.log(friend);
             const friendRecurringSlots = await getDocsWhereCondition( 'fixedSlots', 'userId', friend.id )
             if ( friendRecurringSlots.length > 0 ){
                 
@@ -350,49 +351,75 @@ const matchRecurringSlots = async ( userId, newSlot ) => {
                         matches.push( match )
                     })
                 }
-
             }
-    
+        }
+
+        if( matches.length > 0 ){
+            await postFixedMatches( matches, user )
         }
     }
-
-    console.log( matches );
-
 }  
 
+const postFixedMatches = async ( matches, user ) => {
 
+    const user1 = {
+        userId: user.id,
+        name: user.name,
+        lastname: user.lastname,
+        imgUrl: user.profilePhoto
+    }
 
-// const mySlot = {
-//     days: ['thursday', 'friday'],
-//     startTime: { hour: '9', minute: '00', ampm: 'am' },
-//     endTime: { hour: '10', minute: '00', ampm: 'am' },
-//     userId: 'user1',
-// }
+    for ( const activity of matches ){
+        const response = await getDocsWhereCondition('users', 'id', activity.friendSlot.userId )
+        const userData = response[ 0 ]
+        const match = {
+            user1,
+            user2: {
+                userId: userData.id,
+                name: userData.name,
+                lastname: userData.lastname,
+                imgUrl: userData.profilePhoto
+            },
+            activity: {
+                commonDays: activity.commonDays,
+                starts: activity.overlapTime.starts,
+                ends: activity.overlapTime.ends,
+            }
+        }
+        await createDocumentInCollection( 'recurringMatches', match )
+    }
+}
 
-// const friendRecurringSlots = [
-//     {
-//         days: ['friday'],
-//         startTime: { hour: '10', minute: '0', ampm: 'am' },
-//         endTime: { hour: '11', minute: '0', ampm: 'am' },
-//         userId: 'friend1',
-//     },
-//     {
-//         days: ['friday'],
-//         startTime: { hour: '8', minute: '0', ampm: 'am' },
-//         endTime: { hour: '11', minute: '0', ampm: 'am' },
-//         userId: 'friend2',
-//     },
-//     {
-//         days: ['saturday'],
-//         startTime: { hour: '9', minute: '0', ampm: 'am' },
-//         endTime: { hour: '10', minute: '0', ampm: 'am' },
-//         userId: 'friend3',
-//     },
-// ];
+const getFixedMatches = async ( req, res ) => {
 
-// const resultado = findRecurringSlotsMatches( mySlot, friendRecurringSlots )
-
-// console.log( resultado )
+    try {
+        const matches = []
+        const userId = req.user.uid
+        if( !userId  ) {
+            return res.status( 400 ).json( { message: 'Could not find User ID is required in auth object.' } ) 
+        }
+        const matches1 = await getDocsWhereCondition('recurringMatches', 'user1.userId', userId )
+        if( matches1.length > 0 ){
+            matches1.forEach(( activity ) => {
+                matches.push( activity )
+            })
+        }
+        const matches2 = await getDocsWhereCondition('recurringMatches', 'user2.userId', userId )
+        if( matches2.length > 0 ){
+            matches2.forEach(( activity ) => {
+                matches.push( activity )
+            })
+        }
+        if( matches ) {
+            res.status( 201 ).json( matches )
+        } else {
+            res.status( 400 ).json( { message: 'Could not get user slots.' } )
+        }
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Internal server error.' } )
+    }
+}
 
 
 module.exports = {
@@ -403,5 +430,6 @@ module.exports = {
     deleteFixedSlot,
     getAvailableNowSlots,
     getScheduledSlots,
-    addNewAttendant
+    addNewAttendant,
+    getFixedMatches
 }

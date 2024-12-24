@@ -175,6 +175,19 @@ const updateDocArrayById = async ( collection, docId, updateProperty, updateValu
     }
 }
 
+const updateUserClaims = async ( userId, claim ) => {
+    try {
+    
+        await admin.auth().setCustomUserClaims( userId, claim )
+    } catch (error) {
+        if(error instanceof Error){
+            console.error(`error: ${error.message}`)
+        }
+        throw error
+    }
+}
+
+
 
 
 //EXPORTS
@@ -188,5 +201,6 @@ module.exports = {
     deleteDocById,
     getAllDocsFromCollection,
     getDocAndIdWithCondition,
-    updateDocArrayById
+    updateDocArrayById,
+    updateUserClaims
 }
