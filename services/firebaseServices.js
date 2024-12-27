@@ -175,6 +175,25 @@ const updateDocArrayById = async ( collection, docId, updateProperty, updateValu
     }
 }
 
+const replaceDocArrayById = async ( collection, docId, updateProperty, newArray ) => {
+    try {
+        const docRef = db.collection( collection ).doc( docId );
+
+        // Replace the array with the new one
+        await docRef.update({
+            [updateProperty]: newArray
+        });
+
+        console.log( `Successfully replaced ${ updateProperty } in document ${ docId }` )
+    } catch ( error ) {
+        if ( error instanceof Error ) {
+            console.error(`Error: ${ error.message }`);
+        }
+        throw error
+    }
+}
+
+
 const updateUserClaims = async ( userId, claim ) => {
     try {
     
@@ -202,5 +221,6 @@ module.exports = {
     getAllDocsFromCollection,
     getDocAndIdWithCondition,
     updateDocArrayById,
-    updateUserClaims
+    updateUserClaims,
+    replaceDocArrayById
 }
