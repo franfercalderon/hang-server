@@ -2,7 +2,7 @@ const axios = require('axios')
 
 const getStreetViewUrl = async ( req, res ) => {
 
-    console.log( process.env.MAPS_API_KEY )
+    console.log( 'MAPS_API_KEY:', process.env.MAPS_API_KEY )
 
     try {
         const { lat, lng } = req.query
