@@ -8,7 +8,6 @@ const getStreetViewUrl = async ( req, res ) => {
             return res.status( 400 ).json( { message: 'Coordinates are required in request params.' } ) 
         }
         const url = `https://maps.googleapis.com/maps/api/streetview?size=${ '600x400' }&location=${ `${ lat },${ lng }` }&fov=${ 90 }&key=${ process.env.MAPS_API_KEY }`
-
         const response = await axios.get( url, { responseType: 'arraybuffer' })
         if ( response.status >= 200 && response.status < 300 ) {
             const imageUrl = response.config.url
@@ -18,7 +17,8 @@ const getStreetViewUrl = async ( req, res ) => {
         }
     } catch ( error ) {
         console.error( error )
-        res.status( 500 ).json( 'Internal server error.' )
+        console.log(error);
+        res.status( 500 ).json( error )
     }
 } 
 
