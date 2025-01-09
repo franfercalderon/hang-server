@@ -10,6 +10,7 @@ const slotRoutes = require('./routes/slotRoutes')
 const friendRoutes = require('./routes/friendRoutes')
 const adminRoutes = require('./routes/adminRoutes')
 const notificationRoutes = require('./routes/notificationsRoutes')
+const mapsRoutes = require('./routes/mapsRoutes')
 
 //APP
 const app = express();
@@ -23,6 +24,8 @@ app.use('/users', userRoutes )
 app.use('/slots', slotRoutes )
 app.use('/friends', friendRoutes )
 app.use('/notifications', notificationRoutes )
+app.use('/maps', mapsRoutes )
+
 
 app.get('/', ( req, res ) => {
     res.status(200).json({ message: 'Testo Bueno' })
