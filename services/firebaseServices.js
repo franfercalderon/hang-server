@@ -179,15 +179,14 @@ const replaceDocArrayById = async ( collection, docId, updateProperty, newArray 
     try {
         const docRef = db.collection( collection ).doc( docId );
 
-        // Replace the array with the new one
+        //RE`PLACE THE ARRAY WITH THE NEW ONE
         await docRef.update({
-            [updateProperty]: newArray
+            [ updateProperty ]: newArray
         });
 
-        console.log( `Successfully replaced ${ updateProperty } in document ${ docId }` )
     } catch ( error ) {
         if ( error instanceof Error ) {
-            console.error(`Error: ${ error.message }`);
+            console.error(`Error: ${ error.message }`) 
         }
         throw error
     }
@@ -199,15 +198,40 @@ const updateUserClaims = async ( userId, claim ) => {
     
         await admin.auth().setCustomUserClaims( userId, claim )
     } catch (error) {
-        if(error instanceof Error){
-            console.error(`error: ${error.message}`)
+        if( error instanceof Error ){
+            console.error(`error: ${ error.message }`)
         }
         throw error
     }
 }
 
+const findValueInDocsArray = async ( collection, fieldPath, value ) => {
 
+    try {
+        const querySnapshot = await db.collection( collection ).get()
+        const matches = []
 
+        querySnapshot.forEach(( doc ) => {
+            const data = doc.data()
+            const arrayField = data[ fieldPath ]
+
+            if( Array.isArray( arrayField )){
+                const found = arrayField.some(( item ) => item.userId === value )
+                if( found ){
+                    matches.push( data )
+                }
+            }
+        })
+            
+        return matches
+        
+    } catch (error) {
+        if( error instanceof Error ){
+            console.error(`error: ${ error.message }`)
+        }
+        throw error
+    }
+}
 
 //EXPORTS
 module.exports = {
@@ -222,5 +246,6 @@ module.exports = {
     getDocAndIdWithCondition,
     updateDocArrayById,
     updateUserClaims,
-    replaceDocArrayById
+    replaceDocArrayById,
+    findValueInDocsArray
 }

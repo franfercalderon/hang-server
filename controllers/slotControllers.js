@@ -1,6 +1,47 @@
-const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, updateDocArrayById, getDocAndIdWithCondition, updateDocumentProperties, replaceDocArrayById } = require("../services/firebaseServices")
+const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, updateDocArrayById, getDocAndIdWithCondition, updateDocumentProperties, replaceDocArrayById, findValueInDocsArray } = require("../services/firebaseServices")
 const { v4 } = require('uuid') 
-// const { postNotification } = require("./notificationControllers")
+const { handleNotifications } = require("./notificationControllers")
+
+const getDaySuffix = ( day ) => {
+    if (day >= 11 && day <= 13) return "th"
+    switch (day % 10) {
+
+        case 1: return "st"
+        case 2: return "nd"
+        case 3: return "rd"
+        default: return "th"
+    }
+}
+
+const formatTimestampToDate = ( timestamp )  => {
+
+    const date = new Date( timestamp )
+    const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
+    
+    const day = date.getDate()
+    const daySuffix = getDaySuffix( day )
+    
+    return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
+}
+
+const converTimestampToString = ( timestamp ) => {
+
+    const current = Date.now()
+
+    if( timestamp < current ){
+        return 'now'
+    } else {
+        const date = new Date( timestamp )
+        let hours = date.getHours()
+        const minutes = date.getMinutes()
+        const ampm = hours >= 12 ? 'pm' : 'am'
+        hours = hours % 12 || 12
+        const formattedMinutes = minutes.toString().padStart( 2, '0' )
+
+        return `${ hours }:${ formattedMinutes } ${ ampm }`
+    }
+
+}
 
 const postFixedSlot = async ( req, res ) => {
     try {
@@ -233,7 +274,7 @@ const addNewAttendant = async ( req, res ) => {
         }
 
         await createNotification( notification.userId, notification.text, notification.userImg, notification.name, notification.id )
-
+        
         res.status( 200 ).json( { message: 'User added to event' } )
         
 
@@ -446,6 +487,7 @@ const handlePrivateEvent = async ( event, collection ) => {
         const usersToNotify = sortedMatches.slice( 0, spots ) 
 
         for( const match of usersToNotify ){
+            const invitedId = match.friendSlot.userId
 
             const invite = {
                 event: {
@@ -461,11 +503,26 @@ const handlePrivateEvent = async ( event, collection ) => {
                     location: event.location
                 },
                 invited: {
-                    userId: match.friendSlot.userId
+                    userId: invitedId
                 }
 
             }
+            //CREATE INVITE IN APP
             await createDocumentInCollection( 'eventInvites' , invite )
+            
+            //NOTIFICATIONS
+            const sender = {
+                imgUrl: event.userImg,
+                name: event.userName,
+                lastname: event.userLastname
+            }
+            const message = {
+                system: false,
+                text: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'an event'} at ${ event.location.address }. Date: ${ formatTimestampToDate( event.starts ) } from ${ converTimestampToString( event.starts ) } to ${ converTimestampToString( event.ends ) }.`,
+                subject: 'Your friend is hosting an event you can attend!',
+                url: '/notifications'
+            }
+            await handleNotifications( sender, invitedId, message, false )
 
         }
 
@@ -479,24 +536,6 @@ const handlePrivateEvent = async ( event, collection ) => {
     }
 }
 
-const createNotification = async ( userId, text, senderImgUrl, senderName, system ) => {
-    try {
-        const notification = {
-            userId,
-            text,
-            timestamp: Date.now(),
-            senderImgUrl,
-            senderName,
-            id: v4(),
-            system
-        }
-        await createDocumentInCollection( 'notifications', notification )
-        
-    } catch (error) {
-        console.log(error);
-    }
-}
-
 const handleInviteResponse = async ( req, res ) => {
 
     const invitedId = req.user.uid
@@ -504,13 +543,11 @@ const handleInviteResponse = async ( req, res ) => {
     const { accepted, userData, collection } = req.body
 
     if( !userData || !collection ){
-        console.log(userData);
-        console.log(collection);
         res.status( 400 ).json( 'Data missing in request body' )
     }
-
     
     const { data, docId } = await getDocAndIdWithCondition( collection, 'id', eventId )
+    const inviterId = data.userId
 
     //UPDATES INVITE POOL
     const poolResponse = await getDocAndIdWithCondition( 'invitePool', 'event.id', eventId )
@@ -542,13 +579,29 @@ const handleInviteResponse = async ( req, res ) => {
             //ADDS USER TO EVENT
             await updateDocArrayById( collection, docId, 'attending', newAttendant )
 
-            //SENDS NOTIFICATIONS            
-            const notificationText = `${ newAttendant.name } ${ newAttendant.lastname } has joined your ${ data.title } event.`
-            await createNotification( data.userId, notificationText, newAttendant.userImg, newAttendant.name )
+            //SENDS NOTIFICATIONS       
+            const sender = {
+                imgUrl: userData.img,
+                name: userData.name,
+                lastname: userData.lastname, 
+            }     
+            const message = {
+                system: false ,
+                text: `${ newAttendant.name } ${ newAttendant.lastname } has joined your '${ data.title }' event.`,
+                subject: `You have got company! Someone is attending your Hang`,
+                url:'/notifications',
+            }
+            await handleNotifications( sender, inviterId, message, true )
 
             if( data.spots - attending.length === 1 ){
-                const notificationText = `Your ${ data.title } event is full!`
-                await createNotification( data.userId, notificationText, newAttendant.userImg, newAttendant.name, true )
+
+                const message1 = {
+                    system: true ,
+                    text: `Your '${ data.title }' event is full!`,
+                    subject: `Congratulations! Your ${ data.title } event is full.`,
+                    url:'/notifications',
+                }
+                await handleNotifications( sender, inviterId, message1, true )
             }
             res.status( 200 ).json( 'User added to event' )
 
@@ -710,6 +763,123 @@ const getEventInvites = async ( req, res ) => {
     }
 }
 
+const getOwnEvents = async ( req, res ) => {
+    try {
+        const userId = req.user.uid
+        if( !userId  ) {
+            return res.status( 400 ).json( { message: 'User ID is required in auth object.' } ) 
+        }
+        const events = await getDocsWhereCondition( 'scheduledSlots', 'userId', userId )
+        if( events ) {
+            const currentDate = Date.now()
+            const upcomingActivity = events.filter(( event ) => event.starts  > currentDate )
+            res.status( 201 ).json( upcomingActivity )
+        } else {
+            res.status( 400 ).json( { message: 'Could not get user events.' } )
+        }
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Internal server error.' } )
+    }
+}
+
+const getAttendingEvents = async ( req, res ) => {
+    try {
+        const userId = req.user.uid
+        if( !userId  ) {
+            return res.status( 400 ).json( { message: 'User ID is required in auth object.' } ) 
+        }
+        const eventsData = await findValueInDocsArray( 'scheduledSlots', 'attending', userId )
+        if( eventsData ) {
+            const events = []
+            eventsData.forEach(( event ) => {
+
+                const newEvent = {
+                    title: event.title,
+                    starts: event.starts,
+                    ends: event.ends,
+                    userId: event.userId,
+                    userName: event.userName,
+                    userLastname: event.userLastname,
+                    userImg: event.userImg,
+                    id: event.id,
+                    location: event.location
+                }
+                events.push( newEvent )
+            })
+
+            const currentDate = Date.now()
+            const upcomingActivity = events.filter(( event ) => event.starts  > currentDate )
+            res.status( 201 ).json( upcomingActivity )
+        } else {
+            res.status( 400 ).json( { message: 'Could not get user events.' } )
+        }
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Internal server error.' } )
+    }
+}
+
+const deleteEvent = async ( req, res ) => {
+    try {
+        const userId = req.user.uid
+        const { data, docId } = req.event
+        const { collection } = req.query
+        if( !userId  ) {
+            return res.status( 400 ).json( { message: 'User ID is required in auth object.' } ) 
+        }
+        await deleteDocById( collection, docId )
+        res.status( 201 ).json( { message: 'Event deleted' } )
+
+            if( data.attending.length > 0 ){
+                const response = await getDocsWhereCondition('users', 'id', userId )
+                if( response.length > 0 ){
+                    const sender = response[0]
+                    for( const attendant of data.attending ){
+                        const attendantId = attendant.userId
+                        const message = {
+
+                            system: false,
+                            text: `${ sender.name } ${ sender.lastname } has cancelled ${ data.title ? `'${ data.title }'` : 'their event'}, which was scheduled for ${ formatTimestampToDate( data.starts )} at ${ converTimestampToString( data.starts )}.`,
+                            subject: 'A Hang has been cancelled',
+                            url: '/notifications'
+                        }
+                        await handleNotifications( sender, attendantId, message, true )
+                    }
+                }
+            }
+
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Could not delete event.' } )
+    }
+}
+
+const leaveEvent = async ( req, res ) => {
+    try {
+        const userId = req.user.uid
+        const { collection, eventId } = req.body
+        if( !userId  ) {
+            return res.status( 400 ).json( { message: 'User ID is required in auth object.' } ) 
+        } else if (!collection || !eventId ){
+            return res.status( 400 ).json( { message: 'Collection and eventId are required in request params.' } ) 
+        }
+        const eventData = await getDocAndIdWithCondition( collection, 'id', eventId )
+
+        if( eventData ){
+            const { data, docId } = eventData
+            const attendants = data.attending
+            const updatedAttendants = attendants.filter(( attendant ) => attendant.userId !== userId )
+            await replaceDocArrayById( collection, docId, 'attending', updatedAttendants )
+            res.status( 201 ).json( { message: 'User removed' } )
+        }
+
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'You were not removed from Hang' } )
+    }
+}
+
 
 module.exports = {
     postFixedSlot,
@@ -722,5 +892,9 @@ module.exports = {
     addNewAttendant,
     getFixedMatches,
     getEventInvites,
-    handleInviteResponse
+    handleInviteResponse,
+    getOwnEvents,
+    getAttendingEvents,
+    deleteEvent,
+    leaveEvent
 }

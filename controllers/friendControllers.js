@@ -1,5 +1,6 @@
 const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, getDocAndIdWithCondition, updateDocArrayById } = require("../services/firebaseServices")
 const { v4 } = require('uuid') 
+const { handleExternalNotifications } = require("./notificationControllers")
 
 const getUserFriends = async ( req, res ) => {
 
@@ -42,6 +43,7 @@ const getFriendSuggestions = async ( req, res ) => {
         if( !userId ) {
             return res.status( 400 ).json( { message: 'Could not get User ID from auth object.' } ) 
         }
+
         //GETS USER FRIENDS
         const response = await getDocsWhereCondition( 'users', 'id', userId )
         const user = response[ 0 ]
@@ -52,7 +54,7 @@ const getFriendSuggestions = async ( req, res ) => {
         //LOOPS OVER USER FRIENDS TO GET THEIR FRIENDS
         for ( const friend of userFriends ){
 
-            const userFriend = await getDocsWhereCondition('users', 'id', friend.id )
+            const userFriend = await getDocsWhereCondition( 'users', 'id', friend.id )
 
             if ( userFriend.length > 0 ) {
 
@@ -128,7 +130,14 @@ const postFriendshipRequest = async ( req, res ) => {
             timestamp: Date.now()
         }
     
-        const requestId = await createDocumentInCollection( 'friendshipRequests', friendShipRequest )
+        const requestId = await createDocumentInCollection( 'friendshipRequests', friendShipRequest ) 
+        const receiverResponse = await getDocsWhereCondition( 'users', 'id', receiverId )
+
+        if( receiverResponse.length > 0 ){
+            const receiverUser = receiverResponse[ 0 ]
+            const notificationText = `${ requesterName } ${ requesterLastame } wants to be your friend in Hang.`
+            await handleExternalNotifications( receiverUser, notificationText, 'New friends request' )
+        }
     
         if ( requestId ){
             res.status( 200 ).json( requestId )
