@@ -111,6 +111,7 @@ const postScheduledSlot = async ( req, res ) => {
         const docId = await createDocumentInCollection( 'scheduledSlots', slot )
         if( docId ) {
             res.status( 201 ).json( docId )
+            console.log(slot);
 
             if( slot.isPrivate ){
 
@@ -236,9 +237,13 @@ const getScheduledSlots = async ( req, res ) => {
             const currentTime = Date.now()
             const currentActivity = activity.filter( ( act ) => act.starts > currentTime )
             
+            const filteredActivity = currentActivity.filter(( event ) => 
+
+                !event.attending.some(( user ) => user.userId === userId )
+            )
     
-            if( currentActivity ) {
-                res.status( 201 ).json( currentActivity )
+            if( filteredActivity ) {
+                res.status( 201 ).json( filteredActivity )
             } else {
                 res.status( 400 ).json( { message: 'Could not get friends activity.' } )
             }
@@ -251,29 +256,36 @@ const getScheduledSlots = async ( req, res ) => {
     }
 } 
 
-const addNewAttendant = async ( req, res ) => {
+
+const addNewAttendant = async ( req, res ) => { 
+
     try {
         const { user } = req.body
         const authUser = req.user
         const { docId, data } = req.event
+        const collection = req.collection
 
-        if( req.limitedSeats ){
-            const joiningUser = {
-                id: authUser.uid,
-                imgUrl: user.imgUrl,
-                name: user.name
-            }
-            await updateDocArrayById( 'scheduledSlots', docId, 'attending', joiningUser )
-        } 
-        
-        const notification = {
+        const joiningUser = {
+            userId: authUser.uid,
             userImg: user.imgUrl,
             name: user.name,
-            text: req.limitedSeats ? `${user.name} wants to join your Hang` :  `${user.name} wants to meet you now`,
-            userId: data.userId,
+            lastname: user.lastname
         }
 
-        await createNotification( notification.userId, notification.text, notification.userImg, notification.name, notification.id )
+        await updateDocArrayById( collection, docId, 'attending', joiningUser )
+
+        const sender = {
+            imgUrl: user.imgUrl,
+            name: user.name,
+            lastname: user.lastname
+        }
+        const message = {
+            system: false,
+            text: `${ user.name } ${ user.lastname } has joined your Hang ${ data.title ? `'${ data.title }'.` : '.'}`,
+            subject: 'Someone has joined your Hang!',
+            url: '/notifications'
+        }
+        await handleNotifications( sender, data.userId, message, true )
         
         res.status( 200 ).json( { message: 'User added to event' } )
         
@@ -471,64 +483,109 @@ const getFixedMatches = async ( req, res ) => {
 
 const handlePrivateEvent = async ( event, collection ) => {
     try {
-        //GETS MATCHES FOR EVENT, BASED ON FRIENDS CALENDARS. ORDERS BY PRIORITY.
-        const matches = await matchEventWithRecurringSlots( event )
-        const sortedMatches = matches.sort(( a, b ) => a.friendSlot.priority - b.friendSlot.priority )
 
-        //CREATE DOC IN DB FOR INVITEPOOL
-        const data = {
-            event,
-            sortedMatches,
-        }
-        const poolId = await createDocumentInCollection( 'invitePool' , data )
+        if( event.visibility === 'auto'){
 
-        //CREATES NOTIFICATIONS TO ALL USERS THT FIT INITIALLY
-        const spots = event.spots
-        const usersToNotify = sortedMatches.slice( 0, spots ) 
+            //GETS MATCHES FOR EVENT, BASED ON FRIENDS CALENDARS. ORDERS BY PRIORITY.
+            const matches = await matchEventWithRecurringSlots( event )
+            const sortedMatches = matches.sort(( a, b ) => a.friendSlot.priority - b.friendSlot.priority )
+    
+            //CREATE DOC IN DB FOR INVITEPOOL
+            const data = {
+                event,
+                sortedMatches,
+            }
+    
+            const poolId = await createDocumentInCollection( 'invitePool' , data )
+    
+            //CREATES NOTIFICATIONS TO ALL USERS THT FIT INITIALLY
+            const spots = event.spots
+            const usersToNotify = sortedMatches.slice( 0, spots ) 
+    
+            for( const match of usersToNotify ){
 
-        for( const match of usersToNotify ){
-            const invitedId = match.friendSlot.userId
-
-            const invite = {
-                event: {
-                    userId: event.userId,
-                    eventName: event.title,
-                    starts: event.starts,
-                    ends: event.ends,
-                    userImg: event.userImg,
-                    userName: event.userName,
-                    userLastname: event.userLastname,
-                    collection,
-                    id: event.id,
-                    location: event.location
-                },
-                invited: {
-                    userId: invitedId
+                const invitedId = match.friendSlot.userId
+    
+                const invite = {
+                    event: {
+                        userId: event.userId,
+                        eventName: event.title,
+                        starts: event.starts,
+                        ends: event.ends,
+                        userImg: event.userImg,
+                        userName: event.userName,
+                        userLastname: event.userLastname,
+                        collection,
+                        id: event.id,
+                        location: event.location
+                    },
+                    invited: {
+                        userId: invitedId
+                    }
                 }
+                //CREATE INVITE IN APP
+                await createDocumentInCollection( 'eventInvites' , invite )
+                
+                //NOTIFICATIONS
+                const sender = {
+                    imgUrl: event.userImg,
+                    name: event.userName,
+                    lastname: event.userLastname
+                }
+                const message = {
+                    system: false,
+                    text: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'an event'} at ${ event.location.address }. Date: ${ formatTimestampToDate( event.starts ) } from ${ converTimestampToString( event.starts ) } to ${ converTimestampToString( event.ends ) }.`,
+                    subject: 'Your friend is hosting an event you can attend!',
+                    url: '/notifications'
+                }
+                await handleNotifications( sender, invitedId, message, false )
+    
+            }
+    
+            const updatedArray = sortedMatches.map( item => usersToNotify.some( user => user.friendSlot.id === item.friendSlot.id ) ? { ...item, friendSlot: { ...item.friendSlot, status: 'pending' } } : item )
+    
+            await replaceDocArrayById( 'invitePool', poolId, 'sortedMatches', updatedArray )
+
+        } else if ( event.visibility === 'custom' ){
+
+            for ( const friend of event.customList ){
+
+                const invite = {
+                    event: {
+                        userId: event.userId,
+                        eventName: event.title,
+                        starts: event.starts,
+                        ends: event.ends,
+                        userImg: event.userImg,
+                        userName: event.userName,
+                        userLastname: event.userLastname,
+                        collection,
+                        id: event.id,
+                        location: event.location
+                    },
+                    invited: {
+                        userId: friend.id
+                    }
+                }
+                //CREATE INVITE IN APP
+                await createDocumentInCollection( 'eventInvites' , invite )
+                
+                //NOTIFICATIONS
+                const sender = {
+                    imgUrl: event.userImg,
+                    name: event.userName,
+                    lastname: event.userLastname
+                }
+                const message = {
+                    system: false,
+                    text: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'an event'} at ${ event.location.address }. Date: ${ formatTimestampToDate( event.starts ) } from ${ converTimestampToString( event.starts ) } to ${ converTimestampToString( event.ends ) }.`,
+                    subject: 'Your friend is inviting you to a Hang!',
+                    url: '/notifications'
+                }
+                await handleNotifications( sender, friend.id, message, false )
 
             }
-            //CREATE INVITE IN APP
-            await createDocumentInCollection( 'eventInvites' , invite )
-            
-            //NOTIFICATIONS
-            const sender = {
-                imgUrl: event.userImg,
-                name: event.userName,
-                lastname: event.userLastname
-            }
-            const message = {
-                system: false,
-                text: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'an event'} at ${ event.location.address }. Date: ${ formatTimestampToDate( event.starts ) } from ${ converTimestampToString( event.starts ) } to ${ converTimestampToString( event.ends ) }.`,
-                subject: 'Your friend is hosting an event you can attend!',
-                url: '/notifications'
-            }
-            await handleNotifications( sender, invitedId, message, false )
-
         }
-
-        const updatedArray = sortedMatches.map( item => usersToNotify.some( user => user.friendSlot.id === item.friendSlot.id ) ? { ...item, friendSlot: { ...item.friendSlot, status: 'pending' } } : item )
-
-        await replaceDocArrayById( 'invitePool', poolId, 'sortedMatches', updatedArray )
 
         
     } catch ( error ) {
@@ -549,19 +606,23 @@ const handleInviteResponse = async ( req, res ) => {
     const { data, docId } = await getDocAndIdWithCondition( collection, 'id', eventId )
     const inviterId = data.userId
 
-    //UPDATES INVITE POOL
-    const poolResponse = await getDocAndIdWithCondition( 'invitePool', 'event.id', eventId )
+    if( data.visibility === 'auto'){
 
-    const updatedMatches = poolResponse.data.sortedMatches.map(( match ) => {
-        if ( match.friendSlot.userId === invitedId ){
-            return { ...match, friendSlot: { ...match.friendSlot, status: accepted ? 'accepted': 'rejected' } } 
-        }
-        return match
-    })
+        //UPDATES INVITE POOL
+        const poolResponse = await getDocAndIdWithCondition( 'invitePool', 'event.id', eventId )
+    
+        const updatedMatches = poolResponse.data.sortedMatches.map(( match ) => {
+            if ( match.friendSlot.userId === invitedId ){
+                return { ...match, friendSlot: { ...match.friendSlot, status: accepted ? 'accepted': 'rejected' } } 
+            }
+            return match
+        })
+    
+        const poolDocId = poolResponse.docId
+    
+        await replaceDocArrayById( 'invitePool', poolDocId, 'sortedMatches', updatedMatches )
+    }
 
-    const poolDocId = poolResponse.docId
-
-    await replaceDocArrayById( 'invitePool', poolDocId, 'sortedMatches', updatedMatches )
 
     if ( accepted ){
 
@@ -593,7 +654,7 @@ const handleInviteResponse = async ( req, res ) => {
             }
             await handleNotifications( sender, inviterId, message, true )
 
-            if( data.spots - attending.length === 1 ){
+            if( data.visibility === 'auto' && data.spots - attending.length === 1 ){
 
                 const message1 = {
                     system: true ,
@@ -611,7 +672,7 @@ const handleInviteResponse = async ( req, res ) => {
 
     } else {
 
-        if( data.attending.length < data.spots){
+        if( data.visibility === 'auto' && data.attending.length < data.spots){
             const poolData = poolResponse.data
             const matches = poolData.sortedMatches
 
@@ -654,7 +715,7 @@ const handleInviteResponse = async ( req, res ) => {
     }
 
     //DELETE USER NOTIFICATION
-    const notificationId = await getDocIdWithCondition('eventInvites', 'invited.userId', invitedId )
+    const notificationId = await getDocIdWithCondition( 'eventInvites', 'invited.userId', invitedId )
     await deleteDocById( 'eventInvites', notificationId )
 
 }
@@ -753,7 +814,9 @@ const getEventInvites = async ( req, res ) => {
         }
         const invites = await getDocsWhereCondition( 'eventInvites', 'invited.userId', userId )
         if( invites ) {
-            res.status( 201 ).json( invites )
+            const currentDate = Date.now()
+            const currentInvites = invites.filter(( event ) => event.event.starts > currentDate )
+            res.status( 201 ).json( currentInvites )
         } else {
             res.status( 400 ).json( { message: 'Could not get user slots.' } )
         }

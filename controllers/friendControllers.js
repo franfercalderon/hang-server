@@ -1,4 +1,4 @@
-const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, getDocAndIdWithCondition, updateDocArrayById } = require("../services/firebaseServices")
+const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, getDocAndIdWithCondition, updateDocArrayById, replaceDocArrayById } = require("../services/firebaseServices")
 const { v4 } = require('uuid') 
 const { handleExternalNotifications } = require("./notificationControllers")
 
@@ -215,11 +215,51 @@ const replyFriendsRequest = async ( req, res ) => {
     }
 }
 
+const deleteFriend = async ( req, res ) => {
+    try {
+        const friendId = req.params.id
+        const userId = req.user.uid 
+        if( !friendId ){
+            return res.status( 400 ).json( { message: 'Friend ID is required in request url.' } ) 
+        }
+
+        const user = await getDocAndIdWithCondition('users', 'id', userId )
+        const friend = await getDocAndIdWithCondition('users', 'id', friendId )
+        if( user && friend ){
+            //DELETE FRIEND FROM USERS LIST
+            const userFriends = user.data.friends
+            const friendFriends = friend.data.friends
+            
+            const updatedUserFriends = userFriends.filter(( friend ) => friend.id !== friendId )
+            const updatedFriendFriends = friendFriends.filter(( friend ) => friend.id !== userId )
+
+            if( userFriends.length - updatedUserFriends.length === 1 && friendFriends.length - updatedFriendFriends.length ){
+
+                await replaceDocArrayById('users', user.docId, 'friends', updatedUserFriends )
+                await replaceDocArrayById('users', friend.docId, 'friends', updatedFriendFriends )
+                
+                res.status( 200 ).json( { message: 'Friend deleted' } )
+            } else {
+                res.status( 400 ).json( { message: 'Could not complete the operation' } )
+            }
+            
+        } else {
+            res.status( 400 ).json( { message: 'Could not complete the operation' } )
+
+        }
+
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( 'Internal server error.' )
+    }
+}
+
 module.exports = {
     getUserFriends,
     getFriendSuggestions,
     postFriendshipRequest,
     getFriendshipRequests,
-    replyFriendsRequest
+    replyFriendsRequest,
+    deleteFriend
 
 }

@@ -8,10 +8,12 @@ module.exports = async ( req, res, next ) => {
         if( !event || !user ){
             res.status( 401 ).send( 'Event and user are required in request body.' )  
         } 
-        const eventObject = await getDocAndIdWithCondition(event.limitedSeats ?'scheduledSlots' : 'availableNowSlots', 'id', event.id )
+        const eventObject = await getDocAndIdWithCondition( event.collection, 'id', event.id )
         req.event = eventObject
+        req.collection = event.collection
         
         if( event.limitedSeats ){
+
             const { data } = eventObject
             const attendants = data.attending.length
             const eventSeats = data.spots

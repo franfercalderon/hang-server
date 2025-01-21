@@ -4,7 +4,23 @@ const addPropertyToDocs = async ( req, res ) => {
 
     try {
 
-        const array = await getAllDocsFromCollection( 'users' )
+        // const events = await getAllDocsFromCollection( 'scheduledSlots' ) 
+        // if( events.length > 0 ){
+        //     const filteredEvents = events.filter(( event ) => event.isPrivate === true )
+        //     console.log(filteredEvents.length);
+
+        //     // for ( const event of filteredEvents ){
+
+        //     //     const docId = await getDocIdWithCondition('scheduledSlots', 'id', event.id )
+        //     //     if( docId ){
+        //     //         const data = {
+        //     //             visibility: 'auto'
+        //     //         }
+        //     //         await updateDocumentProperties('scheduledSlots', docId, data )
+        //     //         console.log('updated: ', docId );
+        //     //     } 
+        //     // }
+        // }
         // console.log('largo array: ', array.length);
         // const hasProperty = []
         // const doesntHave = []

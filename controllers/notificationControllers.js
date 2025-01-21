@@ -123,7 +123,7 @@ const updateNotificationPreferences = async ( req, res ) => {
     }
 }
 
-
+ 
 
 module.exports = {
     handleNotifications,
