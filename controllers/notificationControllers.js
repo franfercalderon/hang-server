@@ -74,8 +74,6 @@ const deleteNotification = async ( req, res ) => {
 
 const handleExternalNotifications = async ( user, message ) => {
 
-    console.log(`User wants to get notifications via ${user.notifications.text ? 'text' : ''} and ${user.notifications.email ? 'email': '' }.`);
-
     try {
         if( user.notifications.text ){
 
