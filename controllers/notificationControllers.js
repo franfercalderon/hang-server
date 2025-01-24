@@ -79,10 +79,8 @@ const handleExternalNotifications = async ( user, message ) => {
     try {
         if( user.notifications.text ){
 
-            // const phoneNumber = user.phoneNumber
-            // await sendText( phoneNumber, message )
-            console.log(`Sends text to ${user.name} to ${user.phoneNumber}.`);
-
+            const phoneNumber = user.phoneNumber
+            await sendText( phoneNumber, message )
         } 
         if ( user.notifications.email ){
 
@@ -93,8 +91,7 @@ const handleExternalNotifications = async ( user, message ) => {
                 body: message.text,
                 url: message.url,
             }
-            console.log(`Sends email to ${user.name} to ${user.email}.`);
-            // await sendEmail( emailData )
+            await sendEmail( emailData )
         }
         
     } catch ( error ) {
