@@ -83,6 +83,8 @@ const postAvailableNowSlot = async ( req, res ) => {
         const slot = {
             ...data,
             userId: req.user.uid,
+            attending: [],
+            availableNow: true,
             id: v4()
         }
         const docId = await createDocumentInCollection( 'availableNowSlots', slot )
@@ -111,8 +113,6 @@ const postScheduledSlot = async ( req, res ) => {
         const docId = await createDocumentInCollection( 'scheduledSlots', slot )
         if( docId ) {
             res.status( 201 ).json( docId )
-            console.log(slot);
-
             if( slot.isPrivate ){
 
                 handlePrivateEvent( slot, 'scheduledSlots' ).catch( error => {
@@ -193,9 +193,14 @@ const getAvailableNowSlots = async ( req, res ) => {
             }
             const currentTime = Date.now()
             const currentActivity = activity.filter( ( act ) => act.ends > currentTime )
+
+            const filteredActivity = currentActivity.filter(( event ) => 
+
+                !event.attending.some(( user ) => user.userId === userId )
+            )
     
-            if( currentActivity ) {
-                res.status( 201 ).json( currentActivity )
+            if( filteredActivity ) {
+                res.status( 201 ).json( filteredActivity )
             } else {
                 res.status( 400 ).json( { message: 'Could not get friends activity.' } )
             }
@@ -285,11 +290,14 @@ const addNewAttendant = async ( req, res ) => {
             subject: 'Someone has joined your Hang!',
             url: '/notifications'
         }
-        await handleNotifications( sender, data.userId, message, true )
-        
-        res.status( 200 ).json( { message: 'User added to event' } )
-        
 
+        // await handleNotifications( sender, data.userId, message, true )
+        res.status( 200 ).json( { message: 'User added to event' } )
+        handleNotifications( sender, data.userId, message, true ).catch( error => {
+
+            console.error( 'Error executing handleNotifications:', error )
+        })
+        
     } catch ( error ) {
         console.error( error )
         res.status( 500 ).json( { message: 'Internal server error.' } )
@@ -600,27 +608,34 @@ const handleInviteResponse = async ( req, res ) => {
     const { accepted, userData, collection } = req.body
 
     if( !userData || !collection ){
-        res.status( 400 ).json( 'Data missing in request body' )
+        return res.status( 400 ).json( 'Data missing in request body' )
     }
     
     const { data, docId } = await getDocAndIdWithCondition( collection, 'id', eventId )
     const inviterId = data.userId
 
+    let poolResponse
+    let poolDocId
+
     if( data.visibility === 'auto'){
 
         //UPDATES INVITE POOL
-        const poolResponse = await getDocAndIdWithCondition( 'invitePool', 'event.id', eventId )
-    
-        const updatedMatches = poolResponse.data.sortedMatches.map(( match ) => {
-            if ( match.friendSlot.userId === invitedId ){
-                return { ...match, friendSlot: { ...match.friendSlot, status: accepted ? 'accepted': 'rejected' } } 
-            }
-            return match
-        })
-    
-        const poolDocId = poolResponse.docId
-    
-        await replaceDocArrayById( 'invitePool', poolDocId, 'sortedMatches', updatedMatches )
+        poolResponse = await getDocAndIdWithCondition( 'invitePool', 'event.id', eventId )
+        if( poolResponse ){
+            poolDocId = poolResponse.docId
+        
+            const updatedMatches = poolResponse.data.sortedMatches.map(( match ) => {
+                if ( match.friendSlot.userId === invitedId ){
+                    return { ...match, friendSlot: { ...match.friendSlot, status: accepted ? 'accepted': 'rejected' } } 
+                }
+                return match
+            })
+        
+        
+            await replaceDocArrayById( 'invitePool', poolDocId, 'sortedMatches', updatedMatches )
+        } else {
+            return res.status( 400 ).json({ message: 'Something went wrong.' })
+        }
     }
 
 
@@ -640,6 +655,8 @@ const handleInviteResponse = async ( req, res ) => {
             //ADDS USER TO EVENT
             await updateDocArrayById( collection, docId, 'attending', newAttendant )
 
+            
+            res.status( 200 ).json( 'User added to event' )
             //SENDS NOTIFICATIONS       
             const sender = {
                 imgUrl: userData.img,
@@ -652,7 +669,10 @@ const handleInviteResponse = async ( req, res ) => {
                 subject: `You have got company! Someone is attending your Hang`,
                 url:'/notifications',
             }
-            await handleNotifications( sender, inviterId, message, true )
+            
+            handleNotifications( sender, inviterId, message, true ).catch( error => {
+                console.error( 'Error executing handleNotifications:', error )
+            })
 
             if( data.visibility === 'auto' && data.spots - attending.length === 1 ){
 
@@ -664,7 +684,6 @@ const handleInviteResponse = async ( req, res ) => {
                 }
                 await handleNotifications( sender, inviterId, message1, true )
             }
-            res.status( 200 ).json( 'User added to event' )
 
         } else {
             res.status( 400 ).json( 'Sorry, event is full' )
@@ -673,43 +692,64 @@ const handleInviteResponse = async ( req, res ) => {
     } else {
 
         if( data.visibility === 'auto' && data.attending.length < data.spots){
-            const poolData = poolResponse.data
-            const matches = poolData.sortedMatches
 
-            const pendingMatches = matches.filter(( match ) => match.friendSlot.status === 'null' )
+            if( poolResponse ){
 
-            const sortedPending = pendingMatches.sort(( a, b ) => a.friendSlot.priority - b.friendSlot.priority )
-
-            if( sortedPending.length > 0 ){
-
-                const invite = {
-
-                    event:{
-                        userId: poolData.event.userId,
-                        eventName: poolData.event.title,
-                        starts: poolData.event.starts,
-                        ends: poolData.event.ends,
-                        userImg: poolData.event.userImg,
-                        userName: poolData.event.userName,
-                        userLastname: poolData.event.userLastname,
-                        collection,
-                        id: poolData.event.id,
-                        location: poolData.event.location,
-                    },
-                    invited: {
-                        userId: sortedPending[0].friendSlot.userId
+                const poolData = poolResponse.data
+                const matches = poolData.sortedMatches
+    
+                const pendingMatches = matches.filter(( match ) => match.friendSlot.status === 'null' )
+    
+                const sortedPending = pendingMatches.sort(( a, b ) => a.friendSlot.priority - b.friendSlot.priority )
+    
+                if( sortedPending.length > 0 ){
+    
+                    const invite = {
+    
+                        event:{
+                            userId: poolData.event.userId,
+                            eventName: poolData.event.title,
+                            starts: poolData.event.starts,
+                            ends: poolData.event.ends,
+                            userImg: poolData.event.userImg,
+                            userName: poolData.event.userName,
+                            userLastname: poolData.event.userLastname,
+                            collection,
+                            id: poolData.event.id,
+                            location: poolData.event.location,
+                        },
+                        invited: {
+                            userId: sortedPending[0].friendSlot.userId
+                        }
                     }
+                    await createDocumentInCollection( 'eventInvites' , invite )
+
+                    //NOTIFICATIONS
+                    const sender = {
+                        imgUrl: invite.event.userImg,
+                        name: invite.event.userName,
+                        lastname: invite.event.userLastname
+                    }
+                    const message = {
+                        system: false,
+                        text: `${ invite.event.userName } ${ invite.event.userLastname } is organizing ${ invite.event.eventName ? `'${ invite.event.eventName }'` : 'an event'} at ${ invite.event.location.address }. Date: ${ formatTimestampToDate( invite.event.location.starts ) } from ${ converTimestampToString( invite.event.location.starts ) } to ${ converTimestampToString( invite.event.location.ends ) }.`,
+                        subject: 'Your friend is inviting you to a Hang!',
+                        url: '/notifications'
+                    }
+                    await handleNotifications( sender, invite.invited.userId, message, false )
+    
+                    const updatedMatches = matches.map(item => item.friendSlot.userId === sortedPending[0].friendSlot.userId ? { ...item, friendSlot: { ...item.friendSlot, status: 'pending' } } : item )
+    
+                    await replaceDocArrayById( 'invitePool', poolDocId, 'sortedMatches', updatedMatches )
+    
+                    
+                } else {
+                    res.status( 200 ).json( 'Invitation rejected' )
                 }
-                await createDocumentInCollection( 'eventInvites' , invite )
-
-                const updatedMatches = matches.map(item => item.friendSlot.userId === sortedPending[0].friendSlot.userId ? { ...item, friendSlot: { ...item.friendSlot, status: 'pending' } } : item )
-
-                await replaceDocArrayById( 'invitePool', poolDocId, 'sortedMatches', updatedMatches )
-
-                
             } else {
-                res.status( 200 ).json( 'Invitation rejected' )
+                res.status( 400 ).json({ message: 'Missing poolData' })
             }
+
         }
         res.status( 200 ).json( 'Invitation rejected' )
     }
@@ -826,16 +866,20 @@ const getEventInvites = async ( req, res ) => {
     }
 }
 
-const getOwnEvents = async ( req, res ) => {
+const getOwnEvents = async ( req, res ) => { 
     try {
         const userId = req.user.uid
         if( !userId  ) {
             return res.status( 400 ).json( { message: 'User ID is required in auth object.' } ) 
         }
-        const events = await getDocsWhereCondition( 'scheduledSlots', 'userId', userId )
-        if( events ) {
+        const scheduledEvents = await getDocsWhereCondition( 'scheduledSlots', 'userId', userId )
+        const nowEvents  = await getDocsWhereCondition( 'availableNowSlots', 'userId', userId )
+        if( scheduledEvents && nowEvents ) {
+
+            const allEvents = [ ...scheduledEvents, ...nowEvents ]
             const currentDate = Date.now()
-            const upcomingActivity = events.filter(( event ) => event.starts  > currentDate )
+            const upcomingActivity = allEvents.filter(( event ) => event.ends  > currentDate )
+
             res.status( 201 ).json( upcomingActivity )
         } else {
             res.status( 400 ).json( { message: 'Could not get user events.' } )
@@ -852,11 +896,16 @@ const getAttendingEvents = async ( req, res ) => {
         if( !userId  ) {
             return res.status( 400 ).json( { message: 'User ID is required in auth object.' } ) 
         }
-        const eventsData = await findValueInDocsArray( 'scheduledSlots', 'attending', userId )
-        if( eventsData ) {
-            const events = []
-            eventsData.forEach(( event ) => {
+        const scheduledEvents = await findValueInDocsArray( 'scheduledSlots', 'attending', userId )
+        const nowEvents = await findValueInDocsArray( 'availableNowSlots', 'attending', userId )
 
+
+        if( scheduledEvents && nowEvents ){
+
+            const allEvents = [ ...scheduledEvents, ...nowEvents ]
+            const events = []
+            allEvents.forEach(( event ) => {
+    
                 const newEvent = {
                     title: event.title,
                     starts: event.starts,
@@ -866,17 +915,20 @@ const getAttendingEvents = async ( req, res ) => {
                     userLastname: event.userLastname,
                     userImg: event.userImg,
                     id: event.id,
-                    location: event.location
+                    location: event.location,
+                    availableNow: event.availableNow ? true : false
+                    
                 }
                 events.push( newEvent )
             })
-
             const currentDate = Date.now()
-            const upcomingActivity = events.filter(( event ) => event.starts  > currentDate )
+            const upcomingActivity = events.filter(( event ) => event.ends  > currentDate )
             res.status( 201 ).json( upcomingActivity )
-        } else {
+            
+        } else{
             res.status( 400 ).json( { message: 'Could not get user events.' } )
         }
+
     } catch ( error ) {
         console.error( error )
         res.status( 500 ).json( { message: 'Internal server error.' } )

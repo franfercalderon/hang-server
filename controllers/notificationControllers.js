@@ -74,11 +74,14 @@ const deleteNotification = async ( req, res ) => {
 
 const handleExternalNotifications = async ( user, message ) => {
 
+    console.log(`User wants to get notifications via ${user.notifications.text ? 'text' : ''} and ${user.notifications.email ? 'email': '' }.`);
+
     try {
         if( user.notifications.text ){
 
-            const phoneNumber = user.phoneNumber
-            await sendText( phoneNumber, message )
+            // const phoneNumber = user.phoneNumber
+            // await sendText( phoneNumber, message )
+            console.log(`Sends text to ${user.name} to ${user.phoneNumber}.`);
 
         } 
         if ( user.notifications.email ){
@@ -90,7 +93,8 @@ const handleExternalNotifications = async ( user, message ) => {
                 body: message.text,
                 url: message.url,
             }
-            await sendEmail( emailData )
+            console.log(`Sends email to ${user.name} to ${user.email}.`);
+            // await sendEmail( emailData )
         }
         
     } catch ( error ) {

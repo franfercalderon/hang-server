@@ -1,26 +1,67 @@
+const { messaging } = require("firebase-admin");
 const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, getDocAndIdWithCondition, updateDocArrayById, getAllDocsFromCollection } = require("../services/firebaseServices")
+
+const getDaySuffix = ( day ) => {
+    if (day >= 11 && day <= 13) return "th"
+    switch (day % 10) {
+
+        case 1: return "st"
+        case 2: return "nd"
+        case 3: return "rd"
+        default: return "th"
+    }
+}
+
+const formatTimestampToDate = ( timestamp )  => {
+
+    const date = new Date( timestamp )
+    const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
+    
+    const day = date.getDate()
+    const daySuffix = getDaySuffix( day )
+    
+    return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
+}
 
 const addPropertyToDocs = async ( req, res ) => {
 
     try {
 
-        // const events = await getAllDocsFromCollection( 'scheduledSlots' ) 
+        
+
+        // const events = await getAllDocsFromCollection( 'availableNowSlots' ) 
         // if( events.length > 0 ){
-        //     const filteredEvents = events.filter(( event ) => event.isPrivate === true )
-        //     console.log(filteredEvents.length);
+        //     // const filteredEvents = events.filter(( event ) => event.isPrivate === true )
+        //     // console.log(filteredEvents.length);
+        //     let added = 0
 
-        //     // for ( const event of filteredEvents ){
+        //     for ( const event of events ){
 
-        //     //     const docId = await getDocIdWithCondition('scheduledSlots', 'id', event.id )
-        //     //     if( docId ){
-        //     //         const data = {
-        //     //             visibility: 'auto'
-        //     //         }
-        //     //         await updateDocumentProperties('scheduledSlots', docId, data )
-        //     //         console.log('updated: ', docId );
-        //     //     } 
-        //     // }
+        //         console.log('adding ', event.id);
+                
+        //         const docId = await getDocIdWithCondition('availableNowSlots', 'id', event.id )
+        //         if( docId ){
+        //             const data = {
+        //                 attending: [],
+        //                 availableNow: true
+        //             }
+        //             await updateDocumentProperties('availableNowSlots', docId, data )
+                    
+        //             console.log('updated: ', docId );
+        //             added += 1
+        //         } 
+        //     }
+        //     if( events.length === added ){
+        //         res.status( 200 ).json({ message: 'All events updated' })
+
+        //     } else {
+        //     res.status( 400 ).json({ message: 'Some events were not updated' })
+
+        //     }
+        // } else {
+        //     res.status( 400 ).json({ message: 'No events found' })
         // }
+
         // console.log('largo array: ', array.length);
         // const hasProperty = []
         // const doesntHave = []

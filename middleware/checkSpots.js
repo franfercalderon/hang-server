@@ -2,7 +2,7 @@ const { getDocAndIdWithCondition } = require('../services/firebaseServices')
 
 module.exports = async ( req, res, next ) => {
 
-    const { event, user } = req.body
+    const { event, user } = req.body 
     try {
         
         if( !event || !user ){
@@ -11,22 +11,23 @@ module.exports = async ( req, res, next ) => {
         const eventObject = await getDocAndIdWithCondition( event.collection, 'id', event.id )
         req.event = eventObject
         req.collection = event.collection
-        
-        if( event.limitedSeats ){
 
-            const { data } = eventObject
+        const { data } = eventObject
+        console.log(eventObject.docId);
+        
+        if( !data.availableNow && data.visibility !== 'everybody'){
+  
             const attendants = data.attending.length
             const eventSeats = data.spots
             if( attendants < eventSeats ){
                 req.limitedSeats = true 
                 next()
-
+    
             } else {
                 res.status( 401 ).send( { message: 'Sorry, event is full'} )   
             }
-        } else {
-            
-            req.limitedSeats = false
+        }  else {
+            req.limitedSeats = false 
             next()
         }
 

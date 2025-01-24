@@ -1,6 +1,6 @@
 const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, getDocAndIdWithCondition, updateDocArrayById, replaceDocArrayById } = require("../services/firebaseServices")
 const { v4 } = require('uuid') 
-const { handleExternalNotifications } = require("./notificationControllers")
+const { handleExternalNotifications, handleNotifications } = require("./notificationControllers")
 
 const getUserFriends = async ( req, res ) => {
 
@@ -189,12 +189,13 @@ const replyFriendsRequest = async ( req, res ) => {
         await updateDocumentProperties( 'friendshipRequests', requestRef, data )
         if ( accepted ){
 
-            const invitedId = await getDocIdWithCondition('users', 'id', userId )
+            const invitedObject = await getDocAndIdWithCondition('users', 'id', userId )
+            // const { data, docId } = invitedObject
             const requesterFriend = {
                 id: requesterId,
                 priority: invitedFriendsLength + 1
             }
-            await updateDocArrayById( 'users', invitedId, 'friends', requesterFriend )
+            await updateDocArrayById( 'users', invitedObject.docId, 'friends', requesterFriend )
 
             const inviterObject = await getDocAndIdWithCondition('users', 'id', requesterId )
             const inviterFriendsLength = inviterObject.data.friends.length
@@ -205,6 +206,24 @@ const replyFriendsRequest = async ( req, res ) => {
             await updateDocArrayById( 'users', inviterObject.docId, 'friends', meAsAFriend )        
 
             res.status( 200 ).json( 'Request accepted' )
+
+            //SENDS NOTIFICATIONS       
+            const sender = {
+                imgUrl: invitedObject.data.profilePhoto,
+                name: invitedObject.data.name,
+                lastname: invitedObject.data.lastname, 
+            }     
+            const message = {
+                system: false ,
+                text: `${ invitedObject.data.name } ${ invitedObject.data.lastname } has accepted your friendship request.`,
+                subject: `You have a new friend in Hang!`,
+                url:'/notifications',
+            } 
+
+            handleNotifications( sender, requesterId, message, true ).catch( error => {
+                console.error( 'Error executing handleNotifications:', error )
+            })
+
         } else {
             res.status( 200 ).json( 'Request denied' )
         }
