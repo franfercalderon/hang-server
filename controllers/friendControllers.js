@@ -133,14 +133,14 @@ const postFriendshipRequest = async ( req, res ) => {
         const requestId = await createDocumentInCollection( 'friendshipRequests', friendShipRequest ) 
         const receiverResponse = await getDocsWhereCondition( 'users', 'id', receiverId )
 
-        if( receiverResponse.length > 0 ){
-            const receiverUser = receiverResponse[ 0 ]
-            const notificationText = `${ requesterName } ${ requesterLastame } wants to be your friend in Hang.`
-            await handleExternalNotifications( receiverUser, notificationText, 'New friends request' )
-        }
-    
+        
         if ( requestId ){
             res.status( 200 ).json( requestId )
+            if( receiverResponse.length > 0 ){
+                const receiverUser = receiverResponse[ 0 ]
+                const notificationText = `${ requesterName } ${ requesterLastame } wants to be your friend in Hang.`
+                await handleExternalNotifications( receiverUser, notificationText, 'New friends request' )
+            }
         } else {
             res.status( 400 ).json({ message: 'Could not post request.' })
         }

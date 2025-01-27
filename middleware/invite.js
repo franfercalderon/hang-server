@@ -4,7 +4,7 @@ module.exports = async ( req, res, next ) => {
 
     const userId = req.body.id
     try {
-        const inviterId = req.get( 'InviteId' )
+        const inviterId = req.get( 'InviteId' ) 
 
         if( !inviterId ){
             await deleteAuthUser( userId )

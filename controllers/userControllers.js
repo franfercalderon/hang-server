@@ -1,4 +1,4 @@
-const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, updateUserClaims } = require("../services/firebaseServices")
+const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, updateUserClaims, getDocAndIdWithCondition } = require("../services/firebaseServices")
 
 const handleInvitedUser = async ( req, res ) => {
 
@@ -56,6 +56,10 @@ const handleInvitedUser = async ( req, res ) => {
         console.error( error )
         res.status( 500 ).json( 'Internal server error.' )
     }
+}
+
+const acceptInvite = async ( req, res ) => {
+    
 }
 
 const handleMasterUser = async ( req, res ) => {
@@ -152,23 +156,54 @@ const getUser = async ( req, res ) => {
 }
 
 
-// const updateUser2 = async ( req, res ) => {
-//     try {
-//         const data = req.body
-//         const userId = req.params.id
-//         if( !data || Object.keys( data ).length === 0 ) {
-//             return res.status( 400 ).json( { message: 'User data is required in request body.' } ) 
-//         } else if( !userId ){
-//             return res.status( 400 ).json( { message: 'DocId is required in request params.' } ) 
-//         }
+const acceptInvitation = async ( req, res ) => {
+    try {
+        const friendId = req.params.friendId
+        const userId = req.user.uid
 
-//         await updateUserClaims( userId, data )
-//         res.status( 200 ).json( { message: 'User updated.' } )
-//     } catch ( error ) {
-//         console.error( error )
-//         res.status( 500 ).json( { message: 'Internal server error.' } )
-//     }
-// } 
+        if( !friendId ){
+            return res.status( 400 ).json( { message: 'FriendId is required in request params.' } ) 
+        }
+
+        const friend = await getDocAndIdWithCondition( 'users', 'id', friendId )
+        const user = await getDocAndIdWithCondition( 'users', 'id', userId )
+
+        if( friend && user ){
+
+            //ADDS FRIEND TO USER
+            const newFriend = {
+                id: friendId,
+                priority: user.data.friends.length + 1
+            }
+            const userUpdatedFriends = [ ...user.data.friends, newFriend ]
+            const newData = {
+                friends: userUpdatedFriends
+            }
+            await updateDocumentProperties( 'users', user.docId, newData )
+
+            //ADDS USER TO FRIEND
+            const userAsFriend = {
+                id: userId,
+                priority: friend.data.friends.length + 1
+            }
+            const friendUpdatedFriends = [ ...friend.data.friends, userAsFriend ]
+            const friendData = {
+                friends: friendUpdatedFriends
+            }
+            await updateDocumentProperties( 'users', friend.docId, friendData )
+
+
+            res.status( 200 ).json( { message: 'User updated.' } )
+
+        } else {
+            res.status( 400 ).json( { message: 'Update not processed.' } )
+        }
+        
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Internal server error.' } )
+    }
+} 
 
 module.exports = {
     handleMasterUser,
@@ -176,5 +211,5 @@ module.exports = {
     getUser,
     updateUser,
     updateUserWithAuth,
-    // updateUser2
+    acceptInvitation,
 }

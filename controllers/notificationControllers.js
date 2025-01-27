@@ -73,29 +73,56 @@ const deleteNotification = async ( req, res ) => {
 }
 
 const handleExternalNotifications = async ( user, message ) => {
+    
+    const { notifications, phoneNumber, email, name } = user
+    const { subject, text, url } = message
 
-    try {
-        if( user.notifications.text ){
+    const errors = []
 
-            const phoneNumber = user.phoneNumber
-            await sendText( phoneNumber, message )
-        } 
-        if ( user.notifications.email ){
+    if( notifications.text ){
 
-            const emailData = {
-                emailTo: user.email,
-                userName: user.name,
-                subject: message.subject,
-                body: message.text,
-                url: message.url,
-            }
-            await sendEmail( emailData )
-        }
+        if(!phoneNumber){
+            console.error('Phone Number is missing for text notifications')
+            return 
+        } else{
+            try {
+                await sendText( phoneNumber, message )
         
-    } catch ( error ) {
-        console.error( error )
-        throw error 
+            } catch ( error ) {
+                console.error( error )
+                errors.push({ type: 'text', error })
+            }
+        }
+
+    } 
+    if ( user.notifications.email ){
+
+        if( !email ){
+            console.error('Email is missing for email notifications')
+            return 
+        } else{
+            try {
+                const emailData = {
+                    emailTo: user.email,
+                    userName: user.name,
+                    subject: message.subject,
+                    body: message.text,
+                    url: message.url,
+                }
+                await sendEmail( emailData )
+        
+            } catch ( error ) {
+                console.error( error )
+                errors.push({ type: 'email', error })
+            }
+        }
+
     }
+
+    if ( errors.length > 0 ) {
+        throw new Error( `Notification errors: ${ JSON.stringify( errors )}` );
+    }
+     
 }
 
 const updateNotificationPreferences = async ( req, res ) => {
@@ -123,7 +150,6 @@ const updateNotificationPreferences = async ( req, res ) => {
 }
 
  
-
 module.exports = {
     handleNotifications,
     getUserNotifications,
