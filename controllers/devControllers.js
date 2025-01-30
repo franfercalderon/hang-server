@@ -23,9 +23,23 @@ const formatTimestampToDate = ( timestamp )  => {
     return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
 }
 
-const addPropertyToDocs = async ( req, res ) => {
+const addPropertyToDocs = async ( req, res ) => { 
 
     try {
+
+        const users = await getAllDocsFromCollection('users')
+
+        if( users.length > 0 ){
+            res.status( 200 ).json( users )
+        } else {
+            res.status( 400 ).json( { message: 'No users'} )
+        }
+        // const darby = await getDocAndIdWithCondition('users', 'id', 'V20Lf5TIOrN0LVRLkzUBPQVmXnM2')
+        // if( darby ){
+        //      res.status( 200 ).json( darby )
+        // } else {
+        //     res.status( 400 ).json( { message: 'No users'} )
+        // }
 
         
 

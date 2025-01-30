@@ -995,6 +995,95 @@ const leaveEvent = async ( req, res ) => {
     }
 }
 
+const updateEvent= async ( req, res ) => {
+    try {
+        const userId = req.user.uid
+        const { eventData, eventId } = req.body
+        if( !userId  || !eventData) {
+            return res.status( 400 ).json( { message: 'eventData, eventId are required in request body.' } ) 
+        } 
+        const collection = "scheduledSlots"
+        const eventObject = await getDocAndIdWithCondition(collection, 'id', eventId )
+        if( eventObject ){
+
+            if( eventData.title ){
+                const updatedValue = { title: eventData.title }
+                await updateDocumentProperties( collection, eventObject.docId, updatedValue)
+            }
+            if( eventData.description ){
+                const updatedValue = { description: eventData.description }
+                await updateDocumentProperties( collection, eventObject.docId, updatedValue )
+            }
+            if( eventData.starts ){
+                const updatedValue = { starts: eventData.starts }
+                await updateDocumentProperties( collection, eventObject.docId, updatedValue)
+            }
+            if( eventData.ends ){
+                const updatedValue = { ends: eventData.ends }
+                await updateDocumentProperties( collection, eventObject.docId, updatedValue)
+            }
+            if( eventData.location ){
+                const updatedValue = { location: eventData.location }
+                await updateDocumentProperties( collection, eventObject.docId, updatedValue)
+            }
+            if( eventData.customList && eventData.customList.length > 0 ){
+
+                for( const newFriend of eventData.customList ){
+                    await updateDocArrayById( collection, eventObject.docId, 'customList', newFriend )
+                }
+            }
+
+        }
+        res.status( 200 ).json( { message: 'Event Updated' })
+
+        if( eventData.customList && eventData.customList.length > 0 ){
+
+            for( const newFriend of eventData.customList ){
+
+                const invite = {
+                    event: {
+                        userId: eventObject.data.userId,
+                        eventName: eventData.title && eventData.title !== '' ? eventData.title : eventObject.data.title,
+                        starts: eventData.starts ?? eventObject.data.starts,
+                        ends: eventData.ends ?? eventObject.data.ends,
+                        userImg: eventObject.data.userImg,
+                        userName: eventObject.data.userName,
+                        userLastname: eventObject.data.userLastname,
+                        collection,
+                        id: eventObject.data.id,
+                        location: eventData.location ?? eventObject.data.location
+                    },
+                    invited: {
+                        userId: newFriend.id
+                    }
+                }
+                //CREATE INVITE IN APP
+                await createDocumentInCollection( 'eventInvites' , invite )
+                
+                //NOTIFICATIONS
+                const sender = {
+                    imgUrl: eventObject.data.userImg,
+                    name: eventObject.data.userName,
+                    lastname: eventObject.data.userLastname
+                }
+                console.log();
+                const message = {
+                    system: false,
+                    text: `${ eventObject.data.userName } ${ eventObject.data.userLastname } is organizing ${ eventData.title && eventData.title !== '' ? eventData.title : eventObject.data.title } at ${ eventData.location?.address ?? eventObject.data.location.address }. Date: ${ formatTimestampToDate( eventData.starts ?? eventObject.data.starts ) } from ${ converTimestampToString( eventData.starts ?? eventObject.data.starts ) } to ${ converTimestampToString( eventData.ends ?? eventObject.data.ends ) }.`,
+                    subject: 'Your friend is inviting you to a Hang!',
+                    url: '/notifications'
+                }
+                await handleNotifications( sender, newFriend.id, message, false )
+            } 
+
+        }
+
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'You were not removed from Hang' } )
+    }
+}
+
 
 module.exports = {
     postFixedSlot,
@@ -1011,5 +1100,6 @@ module.exports = {
     getOwnEvents,
     getAttendingEvents,
     deleteEvent,
-    leaveEvent
+    leaveEvent,
+    updateEvent
 }
