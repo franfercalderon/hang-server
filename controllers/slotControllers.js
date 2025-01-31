@@ -1070,7 +1070,7 @@ const updateEvent= async ( req, res ) => {
                 }
                 const message = {
                     system: false,
-                    text: `${ eventObject.data.userName } ${ eventObject.data.userLastname } has updated their event '${ eventData.title && eventData.title !== '' ? eventData.title : eventObject.data.title }'. Check updated details in the Event section of the app.`,
+                    text: `${ eventObject.data.userName } ${ eventObject.data.userLastname } has updated their event '${ eventObject.data.title }'. Check updated details in the Event section of the app.`,
                     subject: 'Attention: A Hang you are attending has changed.',
                     url: '/events'
                 }
