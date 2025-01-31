@@ -1,6 +1,8 @@
 const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, updateDocArrayById, getDocAndIdWithCondition, updateDocumentProperties, replaceDocArrayById, findValueInDocsArray } = require("../services/firebaseServices")
 const { v4 } = require('uuid') 
 const { handleNotifications } = require("./notificationControllers")
+const  { format } = require('date-fns-tz') 
+
 
 const getDaySuffix = ( day ) => {
     if (day >= 11 && day <= 13) return "th"
@@ -13,32 +15,34 @@ const getDaySuffix = ( day ) => {
     }
 }
 
-const formatTimestampToDate = ( timestamp )  => {
+const formatTimestampToDate = ( timestamp, timezone = 'America/Chicago'  )  => {
 
     const date = new Date( timestamp )
-    const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
+    const timeZoneDate = format( date, 'MMMM dd yyy', { timeZone: timezone })
+    // const day = date.getDate()
+    // const daySuffix = getDaySuffix( day )
+    return `${ timeZoneDate }`
+
+    // const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
     
-    const day = date.getDate()
-    const daySuffix = getDaySuffix( day )
+    // const day = date.getDate()
+    // const daySuffix = getDaySuffix( day )
+    // console.log(`${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`);
     
-    return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
+    // return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
 }
 
-const converTimestampToString = ( timestamp ) => {
+const converTimestampToString = ( timestamp, timezone = 'America/Chicago' ) => {
 
     const current = Date.now()
 
     if( timestamp < current ){
         return 'now'
     } else {
-        const date = new Date( timestamp )
-        let hours = date.getHours()
-        const minutes = date.getMinutes()
-        const ampm = hours >= 12 ? 'pm' : 'am'
-        hours = hours % 12 || 12
-        const formattedMinutes = minutes.toString().padStart( 2, '0' )
-
-        return `${ hours }:${ formattedMinutes } ${ ampm }`
+        const date = new Date ( timestamp )
+        const timeZoneDate = format( date, 'h:mm a', { timeZone: timezone })
+        console.log(timeZoneDate);
+        return timeZoneDate
     }
 
 }
@@ -287,7 +291,7 @@ const addNewAttendant = async ( req, res ) => {
         const message = {
             system: false,
             text: `${ user.name } ${ user.lastname } has joined your Hang ${ data.title ? `'${ data.title }'.` : '.'}`,
-            subject: 'Someone has joined your Hang!',
+            subject: 'Someone has joined your Hang!', 
             url: '/notifications'
         }
 

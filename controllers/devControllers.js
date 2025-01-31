@@ -27,13 +27,20 @@ const addPropertyToDocs = async ( req, res ) => {
 
     try {
 
-        const users = await getAllDocsFromCollection('users')
-
-        if( users.length > 0 ){
-            res.status( 200 ).json( users )
+        const events = await getDocsWhereCondition('scheduledSlots', 'userId', 'Us2yiyZ789V5hrpdGmC9u9dxhIe2')
+        if( events ){
+                res.status( 200 ).json( events )
         } else {
-            res.status( 400 ).json( { message: 'No users'} )
+            res.status( 400 ).json( { message: 'No events'} )
         }
+
+        // const users = await getAllDocsFromCollection('users')
+
+        // if( users.length > 0 ){
+        //     res.status( 200 ).json( users )
+        // } else {
+        //     res.status( 400 ).json( { message: 'No users'} )
+        // }
         // const darby = await getDocAndIdWithCondition('users', 'id', 'V20Lf5TIOrN0LVRLkzUBPQVmXnM2')
         // if( darby ){
         //      res.status( 200 ).json( darby )

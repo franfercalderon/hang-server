@@ -1,6 +1,6 @@
 const { getDocAndIdWithCondition } = require('../services/firebaseServices')
 
-module.exports = async ( req, res, next ) => {
+module.exports = async ( req, res, next ) => { 
 
     const { event, user } = req.body 
     try {
@@ -8,12 +8,11 @@ module.exports = async ( req, res, next ) => {
         if( !event || !user ){
             res.status( 401 ).send( 'Event and user are required in request body.' )  
         } 
-        const eventObject = await getDocAndIdWithCondition( event.collection, 'id', event.id )
+        const eventObject = await getDocAndIdWithCondition( event.collection, 'id', event.id ) 
         req.event = eventObject
         req.collection = event.collection
 
         const { data } = eventObject
-        console.log(eventObject.docId);
         
         if( !data.availableNow && data.visibility !== 'everybody'){
   
