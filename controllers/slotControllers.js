@@ -1,50 +1,28 @@
 const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, updateDocArrayById, getDocAndIdWithCondition, updateDocumentProperties, replaceDocArrayById, findValueInDocsArray } = require("../services/firebaseServices")
 const { v4 } = require('uuid') 
 const { handleNotifications } = require("./notificationControllers")
-const  { format } = require('date-fns-tz') 
+const moment = require('moment-timezone');
 
-
-const getDaySuffix = ( day ) => {
-    if (day >= 11 && day <= 13) return "th"
-    switch (day % 10) {
-
-        case 1: return "st"
-        case 2: return "nd"
-        case 3: return "rd"
-        default: return "th"
-    }
-}
 
 const formatTimestampToDate = ( timestamp, timezone = 'America/Chicago'  )  => {
 
-    const date = new Date( timestamp )
-    const timeZoneDate = format( date, 'MMMM dd yyy', { timeZone: timezone })
-    // const day = date.getDate()
-    // const daySuffix = getDaySuffix( day )
-    return `${ timeZoneDate }`
-
-    // const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
-    
-    // const day = date.getDate()
-    // const daySuffix = getDaySuffix( day )
-    // console.log(`${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`);
-    
-    // return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
+    const timeZoned = moment.utc( timestamp ).tz( timezone )
+    const formattedDate = timeZoned.format('MMMM DD, YYYY')
+    return formattedDate
 }
 
 const converTimestampToString = ( timestamp, timezone = 'America/Chicago' ) => {
 
     const current = Date.now()
-
     if( timestamp < current ){
         return 'now'
-    } else {
-        const date = new Date ( timestamp )
-        const timeZoneDate = format( date, 'h:mm a', { timeZone: timezone })
-        console.log(timeZoneDate);
-        return timeZoneDate
-    }
 
+    } else {
+        const timeZoned = moment.utc( timestamp ).tz( timezone ) 
+        const timeZoneDate = timeZoned.format( 'h:mm a' )
+
+        return timeZoneDate 
+    }
 }
 
 const postFixedSlot = async ( req, res ) => {
@@ -1070,7 +1048,6 @@ const updateEvent= async ( req, res ) => {
                     name: eventObject.data.userName,
                     lastname: eventObject.data.userLastname
                 }
-                console.log();
                 const message = {
                     system: false,
                     text: `${ eventObject.data.userName } ${ eventObject.data.userLastname } is organizing ${ eventData.title && eventData.title !== '' ? eventData.title : eventObject.data.title } at ${ eventData.location?.address ?? eventObject.data.location.address }. Date: ${ formatTimestampToDate( eventData.starts ?? eventObject.data.starts ) } from ${ converTimestampToString( eventData.starts ?? eventObject.data.starts ) } to ${ converTimestampToString( eventData.ends ?? eventObject.data.ends ) }.`,
@@ -1080,6 +1057,25 @@ const updateEvent= async ( req, res ) => {
                 await handleNotifications( sender, newFriend.id, message, false )
             } 
 
+        }
+        if( eventObject.data.attending && eventObject.data.attending.length > 0 ){
+
+            for( const attendant of eventObject.data.attending ){
+
+                //NOTIFICATIONS
+                const sender = {
+                    imgUrl: eventObject.data.userImg,
+                    name: eventObject.data.userName,
+                    lastname: eventObject.data.userLastname
+                }
+                const message = {
+                    system: false,
+                    text: `${ eventObject.data.userName } ${ eventObject.data.userLastname } has updated their event '${ eventData.title && eventData.title !== '' ? eventData.title : eventObject.data.title }'. Check updated details in the Event section of the app.`,
+                    subject: 'Attention: A Hang you are attending has changed.',
+                    url: '/events'
+                }
+                await handleNotifications( sender, attendant.userId, message, true )
+            }
         }
 
     } catch ( error ) {
@@ -1105,5 +1101,7 @@ module.exports = {
     getAttendingEvents,
     deleteEvent,
     leaveEvent,
-    updateEvent
+    updateEvent,
+    converTimestampToString,
+    formatTimestampToDate
 }

@@ -1,38 +1,57 @@
 const { messaging } = require("firebase-admin");
 const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, getDocAndIdWithCondition, updateDocArrayById, getAllDocsFromCollection } = require("../services/firebaseServices")
+const { converTimestampToString , formatTimestampToDate } = require('../controllers/slotControllers')
+// const getDaySuffix = ( day ) => {
+//     if (day >= 11 && day <= 13) return "th"
+//     switch (day % 10) {
 
-const getDaySuffix = ( day ) => {
-    if (day >= 11 && day <= 13) return "th"
-    switch (day % 10) {
+//         case 1: return "st"
+//         case 2: return "nd"
+//         case 3: return "rd"
+//         default: return "th"
+//     }
+// }
 
-        case 1: return "st"
-        case 2: return "nd"
-        case 3: return "rd"
-        default: return "th"
-    }
-}
+// const formatTimestampToDate = ( timestamp )  => {
 
-const formatTimestampToDate = ( timestamp )  => {
-
-    const date = new Date( timestamp )
-    const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
+//     const date = new Date( timestamp )
+//     const monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
     
-    const day = date.getDate()
-    const daySuffix = getDaySuffix( day )
+//     const day = date.getDate()
+//     const daySuffix = getDaySuffix( day )
     
-    return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
-}
+//     return `${ monthNames[ date.getMonth() ]} ${ day }${ daySuffix }`
+// }
 
 const addPropertyToDocs = async ( req, res ) => { 
 
     try {
 
-        const events = await getDocsWhereCondition('scheduledSlots', 'userId', 'Us2yiyZ789V5hrpdGmC9u9dxhIe2')
-        if( events ){
-                res.status( 200 ).json( events )
-        } else {
-            res.status( 400 ).json( { message: 'No events'} )
+        // const events = await getDocsWhereCondition('scheduledSlots', 'userId', 'V20Lf5TIOrN0LVRLkzUBPQVmXnM2')
+        // if( events ){
+        //         res.status( 200 ).json( events )
+        // } else {
+        //     res.status( 400 ).json( { message: 'No events'} )
+        // }
+
+        //THIS EVENT STARTS AT 4 PM CHICAGO TIME, AND TIMESTAMP IS STORED IN UTC. WHEN I FORMAT IT BACK TO CHICAGO TIMEZONE, I GET 7PM?
+
+        const event = {
+            starts: 1738360800000,
+            ends: 1738371600000,
         }
+
+        const rawDate = new Date( event.starts )
+        const formattedStart = converTimestampToString( event.starts )
+        const formattedEnd = converTimestampToString( event.ends )
+
+        const formattedDate = formatTimestampToDate( event.starts )
+
+        console.log( 'Raw Date ', rawDate);
+        console.log('Formatted ', `${formattedDate} from ${formattedStart} to ${formattedEnd}` );
+
+        res.status( 200 ).json( {message: 'Ok'} )
+
 
         // const users = await getAllDocsFromCollection('users')
 
