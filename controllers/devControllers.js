@@ -36,19 +36,19 @@ const addPropertyToDocs = async ( req, res ) => {
 
         //THIS EVENT STARTS AT 4 PM CHICAGO TIME, AND TIMESTAMP IS STORED IN UTC. WHEN I FORMAT IT BACK TO CHICAGO TIMEZONE, I GET 7PM?
 
-        const event = {
-            starts: 1738360800000,
-            ends: 1738371600000,
-        }
+        // const event = {
+        //     starts: 1738360800000,
+        //     ends: 1738371600000,
+        // }
 
-        const rawDate = new Date( event.starts )
-        const formattedStart = converTimestampToString( event.starts )
-        const formattedEnd = converTimestampToString( event.ends )
+        const rawDate = new Date( 1738368000000 )
+        const formattedStart = converTimestampToString( 1738368000000 )
+        // const formattedEnd = converTimestampToString( event.ends )
 
-        const formattedDate = formatTimestampToDate( event.starts )
+        const formattedDate = formatTimestampToDate( 1738368000000 )
 
         console.log( 'Raw Date ', rawDate);
-        console.log('Formatted ', `${formattedDate} from ${formattedStart} to ${formattedEnd}` );
+        console.log('Formatted ', `${formattedDate} at ${formattedStart}.` );
 
         res.status( 200 ).json( {message: 'Ok'} )
 
