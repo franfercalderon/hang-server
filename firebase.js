@@ -1,6 +1,6 @@
 const admin = require( 'firebase-admin' )
 const { getFirestore } = require( 'firebase-admin/firestore' )
-const serviceAccount = require('./config/serviceAccount.json')
+const serviceAccount = require('./config/serviceAccountKey.json')
 
 //FIREBASE CONFIG
 const initializationCount = admin.apps.length;
