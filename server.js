@@ -12,6 +12,7 @@ const adminRoutes = require('./routes/adminRoutes')
 const notificationRoutes = require('./routes/notificationsRoutes')
 const mapsRoutes = require('./routes/mapsRoutes')
 const devRoutes = require('./routes/devRoutes' )
+const calendarAPIRoutes = require('./routes/googleOAuthRoutes')
 
 //APP
 const app = express();
@@ -27,6 +28,7 @@ app.use('/friends', friendRoutes )
 app.use('/notifications', notificationRoutes )
 app.use('/maps', mapsRoutes )
 app.use('/dev', devRoutes )
+app.use('/calendarAPI', calendarAPIRoutes )
 
 
 app.get('/', ( req, res ) => {
