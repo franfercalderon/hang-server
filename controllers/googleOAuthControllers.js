@@ -17,8 +17,11 @@ const handleGoogleCallback = async ( req, res ) => {
 
         //await SAVE TOKENS IN USER WITH USER ID
 
-        
-        res.redirect('/settings/calendar')
+
+        ////REPLACE WITH ACTUAL DOMAIN LATER
+        // res.redirect('https://gethangapp.com/settings/calendar');
+        res.redirect('https://hang-client.vercel.app/settings/calendar');
+
 
     } catch ( error ) {
         console.error( 'OAuth Error:', error );
