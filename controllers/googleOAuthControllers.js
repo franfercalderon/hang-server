@@ -87,7 +87,7 @@ const deleteCalendarEvent = async ( req, res ) => {
 
 const checkCalendarConnection = async ( req, res ) => {
     try {
-        // console.log('ladygaga');
+        console.log('ladygaga');
         // const userId = req.user?.uid;
         // if ( !userId ) {
         //     return res.json({ connectedEmail: null });
