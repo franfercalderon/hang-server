@@ -28,7 +28,7 @@ const redirectToGoogle = async ( req, res ) => {
 
 const handleGoogleCallback = async ( req, res ) => {
 
-    
+
     try {
 
         if( !code || !state ){
@@ -85,20 +85,52 @@ const deleteCalendarEvent = async ( req, res ) => {
     }
 }
 
+// const checkCalendarConnection = async ( req, res ) => {
+
+
+//     try {
+//         const userId = req.user.uid
+//         const tokensDoc = await getDocsWhereCondition('calendarTokens', 'userId', userId )
+//         if( tokensDoc.length > 0 ){
+//             const email = getUserEmail( tokensDoc.tokens )
+//             res.json({ connectedEmail: email  })
+//         } else {
+//             res.json({ connectedEmail: null  })
+//         }
+//     } catch ( error ) {
+//         res.status( 500 ).json({ message: 'Could not check connection.'})
+//     }
+// }
+
 const checkCalendarConnection = async ( req, res ) => {
     try {
-        const userId = req.user.uid
-        const tokensDoc = await getDocsWhereCondition('calendarTokens', 'userId', userId )
-        if( tokensDoc.length > 0 ){
-            const email = getUserEmail( tokensDoc.tokens )
-            res.json({ connectedEmail: email  })
-        } else {
-            res.json({ connectedEmail: null  })
+        const userId = req.user?.uid;
+        if ( !userId ) {
+            return res.json({ connectedEmail: null });
         }
-    } catch ( error ) {
-        res.status( 500 ).json({ message: 'Could not check connection.'})
+
+        const tokensDoc = await getDocsWhereCondition( "calendarTokens", "userId", userId )
+
+        if ( !tokensDoc || tokensDoc.length === 0 ) {
+            console.warn( "No Google tokens found for user:", userId )
+            return res.json( { connectedEmail: null } )
+        }
+
+        const tokens = tokensDoc[0]?.tokens;
+        if (!tokens || !tokens.access_token) {
+            console.warn("Invalid tokens for user:", userId);
+            return res.json({ connectedEmail: null });
+        }
+
+        const email = await getUserEmail(tokens);
+        res.json({ connectedEmail: email });
+
+    } catch (error) {
+        console.error( "Error checking Google Calendar connection:", error )
+        res.status( 500 ).json({ connectedEmail: null })
     }
 }
+
 
 const disconnectCalendar = async ( req, res ) => {
     try {
