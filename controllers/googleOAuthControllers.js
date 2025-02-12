@@ -2,17 +2,20 @@ const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocum
 const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = ( req, res ) => {
-    
+
     const userId = req.query.userId
     const url = generateAuthUrl({
         state: JSON.stringify({ userId })
     })
+    console.log(url);
     res.redirect( url )
 }
 
 const handleGoogleCallback = async ( req, res ) => {
 
     const { code, state } = req.query
+    console.log(code);
+    console.log(state);
 
     try {
         const tokens = await getTokens( code )
