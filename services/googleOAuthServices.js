@@ -58,6 +58,9 @@ async function addEvent( tokens, eventData ) {
     return response.data;
 }
 
+// curl -H "Authorization: Bearer ya29.a0AXeO80S61ipkTWJ9UVdH231JXXF3AMiFjZMRaSHpLGyNwtuEQdz6VqfHQxjKZ3qerceo9pDECHAkIkGKx391TSKwK3oHLu47vaoXEOccCiB9Z99shHpiBxPRWsc77y6IuSSuJvCASMMBItbi3wO6oOHTyvurrn1MS5kFiGNUaCgYKASUSARESFQHGX2MihSJn1-wjUA849aVuRhA-fQ0175" https://www.googleapis.com/oauth2/v2/userinfo
+
+
 async function deleteEvent( tokens, eventId ) {
     const auth = setCredentials( tokens );
     const calendar = google.calendar({ version: 'v3', auth });

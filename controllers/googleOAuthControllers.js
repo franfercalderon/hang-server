@@ -89,30 +89,21 @@ const checkCalendarConnection = async ( req, res ) => {
     try {
         const userId = req.user.uid;
         if ( !userId ) {
-            return res.json({ isConnected: null });
+            return res.json({ isConnected: false });
         }
 
         const response = await getDocsWhereCondition( "calendarTokens", "userId", userId )
 
         if ( response.length > 0 ) {
-            const tokensDoc = response[0]
-            const email = await getUserEmail( tokensDoc.tokens )
-            console.log(email);
             return res.json({ isConnected: true })
-
+            
+            // const tokensDoc = response[0]
+            // const email = await getUserEmail( tokensDoc.tokens )
+            // console.log(email);
 
         } else{
-            return res.json( { isConnected: null } )
+            return res.json( { isConnected: false } )
         }
-
-        // const tokens = tokensDoc[0]?.tokens;
-        // if (!tokens || !tokens.access_token) {
-        //     console.warn("Invalid tokens for user:", userId);
-        //     return res.json({ connectedEmail: null });
-        // }
-
-        // const email = await getUserEmail(tokens);
-        // res.json({ connectedEmail: true });
 
     } catch (error) {
         console.error( "Error checking Google Calendar connection:", error )
