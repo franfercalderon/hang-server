@@ -233,6 +233,19 @@ const findValueInDocsArray = async ( collection, fieldPath, value ) => {
     }
 }
 
+const decodeToken = async ( token ) => {
+    try {
+        const decodedToken = await admin.auth().verifyIdToken( token )
+        return decodedToken
+        
+    } catch (error) {
+        if( error instanceof Error ){
+            console.error(`error: ${ error.message }`)
+        }
+        throw error
+    }
+}
+
 //EXPORTS
 module.exports = {
     createDocumentInCollection,
@@ -247,5 +260,6 @@ module.exports = {
     updateDocArrayById,
     updateUserClaims,
     replaceDocArrayById,
-    findValueInDocsArray
+    findValueInDocsArray,
+    decodeToken
 }

@@ -1,16 +1,30 @@
-const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection } = require('../services/firebaseServices')
+const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection, decodeToken } = require('../services/firebaseServices')
 const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = require('../services/googleOAuthServices')
 
-const redirectToGoogle = ( req, res ) => {
+const redirectToGoogle = async ( req, res ) => {
 
-    const userId = req.query.authToken
-    console.log(userId);
-    console.log(JSON.stringify({ userId }));
-    const url = generateAuthUrl({
-        state: userId
-    })
-    console.log(url);
-    res.redirect( url )
+    try {
+        const authToken = req.query.authToken
+        if( !authToken){
+            req.status( 400 ).json({ message: 'Could not find auth token'})
+        } else {
+            const decodedToken = await decodeToken( authToken )
+            console.log( decodedToken );
+        }
+    
+        console.log(userId);
+        console.log(JSON.stringify({ userId }));
+        const url = generateAuthUrl({
+            state: userId
+        })
+        console.log(url);
+        res.redirect( url )
+        
+    } catch ( error ) {
+        console.error( 'OAuth Error:', error );
+        res.status( 500 ).send( 'Redirect failed.' );
+    }
+
 }
 
 const handleGoogleCallback = async ( req, res ) => {
