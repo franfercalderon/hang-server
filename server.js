@@ -80,35 +80,35 @@ const path = require('path');
 
 require('dotenv').config();
 
-// ✅ Define allowed origins
-const allowedOrigins = ['https://gethangapp.com']; // Add other allowed origins if needed
+const allowedOrigins = ['https://gethangapp.com']; 
 
-// ✅ CORS Configuration
 const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
+    origin: function ( origin, callback ) {
+        if (!origin || allowedOrigins.includes( origin )) {
+            callback( null, true );
         } else {
-            callback(new Error('Not allowed by CORS'));
+            callback( new Error( 'Not allowed by CORS' ));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true // ✅ Allow cookies & authentication headers
+    methods: 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true 
 };
 
-// ✅ Create Express App
 const app = express();
-app.use(cors(corsOptions)); // ✅ Apply CORS globally
+app.use(cors(corsOptions)); 
 
-// ✅ Handle Preflight (OPTIONS) Requests Properly
-app.options('*', (req, res) => {
-    res.set('Access-Control-Allow-Origin', 'https://gethangapp.com');
-    res.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-    res.set('Access-Control-Allow-Credentials', 'true');
-    res.sendStatus(204); // ✅ Send success response
-});
+app.options('*', cors(corsOptions)); 
+
+
+
+// app.options('*', (req, res) => {
+//     res.set('Access-Control-Allow-Origin', 'https://gethangapp.com');
+//     res.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+//     res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+//     res.set('Access-Control-Allow-Credentials', 'true');
+//     res.sendStatus(204); 
+// });
 
 app.use(express.json());
 
