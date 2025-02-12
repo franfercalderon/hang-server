@@ -13,7 +13,8 @@ const redirectToGoogle = async ( req, res ) => {
             console.log(userId);
             const url = generateAuthUrl({
                 state: JSON.stringify({ userId }) 
-            })
+            });            
+            
             console.log(url);
             res.redirect( url )
         }
@@ -43,7 +44,7 @@ const handleGoogleCallback = async ( req, res ) => {
         if ( tokenDocId ){
             res.redirect('https://gethangapp.com/settings/calendar');
         } else {
-            res.state( 400 ).json({ message: 'Could not store tokens in database' })
+            res.status( 400 ).json({ message: 'Could not store tokens in database' })
         }
 
     } catch ( error ) {

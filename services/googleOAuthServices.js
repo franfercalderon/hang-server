@@ -8,12 +8,13 @@ const oauth2Client = new google.auth.OAuth2(
 
 const SCOPES = [ 'https://www.googleapis.com/auth/calendar.events.owned' ]
 
-function generateAuthUrl() {
+function generateAuthUrl( options ) {
 
     return oauth2Client.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
         scope: SCOPES,
+        state: options.state
     });
 }
 
