@@ -6,19 +6,17 @@ const redirectToGoogle = async ( req, res ) => {
     try {
         const authToken = req.query.authToken
         if( !authToken){
-            req.status( 400 ).json({ message: 'Could not find auth token'})
+            res.status( 400 ).json({ message: 'Could not find auth token'})
         } else {
             const decodedToken = await decodeToken( authToken )
-            console.log( decodedToken );
+            const userId = decodedToken.uid
+            console.log(userId);
+            const url = generateAuthUrl({
+                state: JSON.stringify({ userId }) 
+            })
+            console.log(url);
+            res.redirect( url )
         }
-    
-        console.log(userId);
-        console.log(JSON.stringify({ userId }));
-        const url = generateAuthUrl({
-            state: userId
-        })
-        console.log(url);
-        res.redirect( url )
         
     } catch ( error ) {
         console.error( 'OAuth Error:', error );
