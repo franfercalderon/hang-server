@@ -1,11 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
+// const express = require('express');
+// const cors = require('cors');
+// const path = require('path');
 
-require('dotenv').config()
+// require('dotenv').config()
 
-//APP
-const app = express();
+// //APP
+// const app = express();
 
 //ORIGINAL
 // app.use(cors());
