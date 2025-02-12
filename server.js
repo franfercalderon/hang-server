@@ -6,14 +6,42 @@ require('dotenv').config()
 
 //APP
 const app = express();
+
+//ORIGINAL
 // app.use(cors());
-app.use(cors({
-    origin: 'https://gethangapp.com', 
+
+//UPDATE2
+// app.use(cors({
+//     origin: 'https://gethangapp.com', 
+//     methods: 'GET,POST,PUT,DELETE,OPTIONS',
+//     allowedHeaders: 'Content-Type,Authorization',
+//     credentials: true 
+// }));
+// app.options('*', cors());
+
+//UPDATE3
+const allowedOrigins = ['https://gethangapp.com']; // Change this if you need multiple origins
+
+// ✅ Apply CORS middleware
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: 'GET,POST,PUT,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type,Authorization',
-    credentials: true 
-}));
-app.options('*', cors());
+    credentials: true // Allow cookies if needed
+};
+
+// const app = express();
+app.use(cors(corsOptions));  // ✅ Apply CORS globally
+
+// ✅ Handle Preflight (OPTIONS) Requests
+app.options('*', cors(corsOptions));
+
 
 app.use(express.json());
 
