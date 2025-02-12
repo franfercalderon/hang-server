@@ -29,14 +29,14 @@ const redirectToGoogle = async ( req, res ) => {
 const handleGoogleCallback = async ( req, res ) => {
 
     const { code, state } = req.query
-    console.log(code);
-    console.log(state);
+    const userIdObject = JSON.parse( state )
+    const userId = userIdObject.userId
 
     try {
         const tokens = await getTokens( code )
         const tokenObjectForDb = {
             tokens: tokens,
-            userId: JSON.parse( state.userId )
+            userId: userId
         }
         console.log(tokenObjectForDb);
 
