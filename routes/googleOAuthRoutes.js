@@ -13,7 +13,7 @@ router.post('/calendar/events', auth, createCalendarEvent )
 
 //DELETE
 router.delete('/event/:id', auth, deleteCalendarEvent )
-router.delete('/calendarConnection', auth, disconnectCalendar )
+router.delete('/auth/calendarConnection', auth, disconnectCalendar )
 
 
 module.exports = router
