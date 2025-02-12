@@ -87,18 +87,22 @@ const deleteCalendarEvent = async ( req, res ) => {
 
 const checkCalendarConnection = async ( req, res ) => {
     try {
-        console.log('ladygaga');
-        // const userId = req.user?.uid;
-        // if ( !userId ) {
-        //     return res.json({ connectedEmail: null });
-        // }
+        const userId = req.user.uid;
+        if ( !userId ) {
+            return res.json({ isConnected: null });
+        }
 
-        // const tokensDoc = await getDocsWhereCondition( "calendarTokens", "userId", userId )
+        const response = await getDocsWhereCondition( "calendarTokens", "userId", userId )
 
-        // if ( !tokensDoc || tokensDoc.length === 0 ) {
-        //     console.warn( "No Google tokens found for user:", userId )
-        //     return res.json( { connectedEmail: null } )
-        // }
+        if ( response.length > 0 ) {
+            const tokensDoc = response[0]
+            console.log(tokensDoc.tokens);
+            return res.json({ isConnected: true })
+
+
+        } else{
+            return res.json( { isConnected: null } )
+        }
 
         // const tokens = tokensDoc[0]?.tokens;
         // if (!tokens || !tokens.access_token) {
@@ -107,7 +111,7 @@ const checkCalendarConnection = async ( req, res ) => {
         // }
 
         // const email = await getUserEmail(tokens);
-        res.json({ connectedEmail: true });
+        // res.json({ connectedEmail: true });
 
     } catch (error) {
         console.error( "Error checking Google Calendar connection:", error )
