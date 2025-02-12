@@ -4,8 +4,10 @@ const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = requ
 const redirectToGoogle = ( req, res ) => {
 
     const userId = req.query.userId
+    console.log(userId);
+    console.log(JSON.stringify({ userId }));
     const url = generateAuthUrl({
-        state: JSON.stringify({ userId })
+        state: userId
     })
     console.log(url);
     res.redirect( url )
