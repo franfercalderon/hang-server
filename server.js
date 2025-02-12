@@ -98,7 +98,7 @@ const corsOptions = {
 };
 
 // ✅ Create Express App
-// const app = express();
+const app = express();
 app.use(cors(corsOptions)); // ✅ Apply CORS globally
 
 // ✅ Handle Preflight (OPTIONS) Requests Properly
