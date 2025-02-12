@@ -87,27 +87,27 @@ const deleteCalendarEvent = async ( req, res ) => {
 
 const checkCalendarConnection = async ( req, res ) => {
     try {
-        console.log('ladygaga');
-        const userId = req.user?.uid;
-        if ( !userId ) {
-            return res.json({ connectedEmail: null });
-        }
+        // console.log('ladygaga');
+        // const userId = req.user?.uid;
+        // if ( !userId ) {
+        //     return res.json({ connectedEmail: null });
+        // }
 
-        const tokensDoc = await getDocsWhereCondition( "calendarTokens", "userId", userId )
+        // const tokensDoc = await getDocsWhereCondition( "calendarTokens", "userId", userId )
 
-        if ( !tokensDoc || tokensDoc.length === 0 ) {
-            console.warn( "No Google tokens found for user:", userId )
-            return res.json( { connectedEmail: null } )
-        }
+        // if ( !tokensDoc || tokensDoc.length === 0 ) {
+        //     console.warn( "No Google tokens found for user:", userId )
+        //     return res.json( { connectedEmail: null } )
+        // }
 
-        const tokens = tokensDoc[0]?.tokens;
-        if (!tokens || !tokens.access_token) {
-            console.warn("Invalid tokens for user:", userId);
-            return res.json({ connectedEmail: null });
-        }
+        // const tokens = tokensDoc[0]?.tokens;
+        // if (!tokens || !tokens.access_token) {
+        //     console.warn("Invalid tokens for user:", userId);
+        //     return res.json({ connectedEmail: null });
+        // }
 
-        const email = await getUserEmail(tokens);
-        res.json({ connectedEmail: email });
+        // const email = await getUserEmail(tokens);
+        res.json({ connectedEmail: true });
 
     } catch (error) {
         console.error( "Error checking Google Calendar connection:", error )
