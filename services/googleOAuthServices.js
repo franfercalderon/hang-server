@@ -24,6 +24,7 @@ async function getTokens( code ) {
 }
 
 async function getUserEmail ( tokens ) {
+    console.log('ladygaga getUserEmail ',tokens);
     const auth = setCredentials( tokens );
     const oauth2 = google.oauth2({ version: 'v2', auth });
 
