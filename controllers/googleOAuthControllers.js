@@ -85,25 +85,9 @@ const deleteCalendarEvent = async ( req, res ) => {
     }
 }
 
-// const checkCalendarConnection = async ( req, res ) => {
-
-
-//     try {
-//         const userId = req.user.uid
-//         const tokensDoc = await getDocsWhereCondition('calendarTokens', 'userId', userId )
-//         if( tokensDoc.length > 0 ){
-//             const email = getUserEmail( tokensDoc.tokens )
-//             res.json({ connectedEmail: email  })
-//         } else {
-//             res.json({ connectedEmail: null  })
-//         }
-//     } catch ( error ) {
-//         res.status( 500 ).json({ message: 'Could not check connection.'})
-//     }
-// }
-
 const checkCalendarConnection = async ( req, res ) => {
     try {
+        console.log('ladygaga');
         const userId = req.user?.uid;
         if ( !userId ) {
             return res.json({ connectedEmail: null });
