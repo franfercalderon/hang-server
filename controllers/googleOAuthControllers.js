@@ -1,29 +1,32 @@
-const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById } = require('../services/firebaseServices')
-const { generateAuthUrl, getTokens, addEvent, deleteEvent, } = require('../services/googleOAuthServices')
+const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection } = require('../services/firebaseServices')
+const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = ( req, res ) => {
-    console.log(process.env.GOOGLE_CLIENT_ID)
-    console.log(process.env.GOOGLE_CLIENT_SECRET)
-    console.log(process.env.GOOGLE_REDIRECT_URI)
-    const url = generateAuthUrl()
+    const userId = req.user.uid
+    const url = generateAuthUrl({
+        state: JSON.stringify({ userId })
+    })
     res.redirect( url )
 }
 
 const handleGoogleCallback = async ( req, res ) => {
 
-    const { code } = req.query
+    const { code, state } = req.query
 
     try {
         const tokens = await getTokens( code )
-        // console.log(tokens);
+        const tokenObjectForDb = {
+            tokens: tokens,
+            userId: JSON.parse( state )
+        }
+        console.log(tokenObjectForDb);
 
-        //await SAVE TOKENS IN USER WITH USER ID
-
-
-        ////REPLACE WITH ACTUAL DOMAIN LATER
-        // res.redirect('https://gethangapp.com/settings/calendar');
-        res.redirect('https://gethangapp.com/settings/calendar');
-
+        const tokenDocId = await createDocumentInCollection('', tokenObjectForDb )
+        if ( tokenDocId ){
+            res.redirect('https://gethangapp.com/settings/calendar');
+        } else {
+            res.state( 400 ).json({ message: 'Could not store tokens in database' })
+        }
 
     } catch ( error ) {
         console.error( 'OAuth Error:', error );
@@ -61,8 +64,13 @@ const deleteCalendarEvent = async ( req, res ) => {
 const checkCalendarConnection = async ( req, res ) => {
     try {
         const userId = req.user.uid
-        const tokens = await getDocsWhereCondition('calendarTokens', 'userId', userId )
-        res.json({ isConnected: tokens.length > 0 ? true : false  })
+        const tokensDoc = await getDocsWhereCondition('calendarTokens', 'userId', userId )
+        if( tokensDoc.length > 0 ){
+            const email = getUserEmail( tokensDoc.tokens )
+            res.json({ connectedEmail: email  })
+        } else {
+            res.json({ connectedEmail: null  })
+        }
     } catch ( error ) {
         res.status( 500 ).json({ message: 'Could not check connection.'})
     }

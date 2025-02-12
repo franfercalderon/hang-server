@@ -9,7 +9,7 @@ const oauth2Client = new google.auth.OAuth2(
 const SCOPES = [ 'https://www.googleapis.com/auth/calendar.events.owned' ]
 
 function generateAuthUrl() {
-    
+
     return oauth2Client.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
@@ -21,6 +21,15 @@ async function getTokens( code ) {
     const { tokens } = await oauth2Client.getToken( code );
     return tokens;
 }
+
+async function getUserEmail ( tokens ) {
+    const auth = setCredentials( tokens );
+    const oauth2 = google.oauth2({ version: 'v2', auth });
+
+    const response = await oauth2.userinfo.get();
+    return response.data.email;
+}
+  
 
 function setCredentials( tokens ) {
     oauth2Client.setCredentials( tokens );
@@ -57,4 +66,11 @@ async function deleteEvent( tokens, eventId ) {
 }
   
 
-module.exports = { generateAuthUrl, getTokens, setCredentials, addEvent, deleteEvent };
+module.exports = { 
+    generateAuthUrl, 
+    getTokens, 
+    setCredentials, 
+    addEvent, 
+    deleteEvent,
+    getUserEmail 
+}

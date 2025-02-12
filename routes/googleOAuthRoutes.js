@@ -4,7 +4,7 @@ const auth = require('../middleware/auth')
 const { redirectToGoogle, handleGoogleCallback, createCalendarEvent, deleteCalendarEvent, checkCalendarConnection, disconnectCalendar } = require('../controllers/googleOAuthControllers')
 
 //GET
-router.get('/auth/google', redirectToGoogle )
+router.get('/auth/google', auth, redirectToGoogle )
 router.get('/auth/google/callback', handleGoogleCallback )
 router.get('/checkConnection', auth, checkCalendarConnection )
 
