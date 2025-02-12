@@ -2,7 +2,8 @@ const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocum
 const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = ( req, res ) => {
-    const userId = req.user.uid
+    
+    const userId = req.query.userId
     const url = generateAuthUrl({
         state: JSON.stringify({ userId })
     })
