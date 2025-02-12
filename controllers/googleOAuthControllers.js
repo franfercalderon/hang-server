@@ -28,23 +28,28 @@ const redirectToGoogle = async ( req, res ) => {
 
 const handleGoogleCallback = async ( req, res ) => {
 
-    const { code, state } = req.query
-    const userIdObject = JSON.parse( state )
-    const userId = userIdObject.userId
-
+    
     try {
-        const tokens = await getTokens( code )
-        const tokenObjectForDb = {
-            tokens: tokens,
-            userId: userId
-        }
-        console.log(tokenObjectForDb);
 
-        const tokenDocId = await createDocumentInCollection('calendarTokens', tokenObjectForDb )
-        if ( tokenDocId ){
-            res.redirect('https://gethangapp.com/settings/calendar');
+        if( !code || !state ){
+            return res.status( 400 ).json({ message: 'Missing code or state in callback url' })
         } else {
-            res.status( 400 ).json({ message: 'Could not store tokens in database' })
+            const { code, state } = req.query
+            const userIdObject = JSON.parse( state )
+            const userId = userIdObject.userId
+            const tokens = await getTokens( code )
+            const tokenObjectForDb = {
+                tokens: tokens,
+                userId: userId
+            }
+            console.log(tokenObjectForDb);
+    
+            const tokenDocId = await createDocumentInCollection('calendarTokens', tokenObjectForDb )
+            if ( tokenDocId ){
+                res.redirect('https://gethangapp.com/settings/calendar');
+            } else {
+                res.status( 400 ).json({ message: 'Could not store tokens in database' })
+            }
         }
 
     } catch ( error ) {

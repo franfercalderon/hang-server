@@ -4,6 +4,19 @@ const path = require('path');
 
 require('dotenv').config()
 
+//APP
+const app = express();
+// app.use(cors());
+app.use(cors({
+    origin: 'https://gethangapp.com', 
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true 
+}));
+app.options('*', cors());
+
+app.use(express.json());
+
 //ROUTES
 const userRoutes = require('./routes/userRoutes')
 const slotRoutes = require('./routes/slotRoutes')
@@ -14,12 +27,6 @@ const mapsRoutes = require('./routes/mapsRoutes')
 const devRoutes = require('./routes/devRoutes' )
 const calendarAPIRoutes = require('./routes/googleOAuthRoutes')
 
-//APP
-const app = express();
-app.use(cors());
-// app.use('/api/accounts/stripe_webhook', express.raw({ type: '*/*' }))
-
-app.use(express.json());
 
 app.use('/admin', adminRoutes )
 app.use('/users', userRoutes )
