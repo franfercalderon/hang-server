@@ -28,6 +28,7 @@ async function getUserEmail ( tokens ) {
     const oauth2 = google.oauth2({ version: 'v2', auth });
 
     const response = await oauth2.userinfo.get();
+    console.log(`response ladygaga: `,response);
     return response.data.email;
 }
   

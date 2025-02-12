@@ -96,7 +96,8 @@ const checkCalendarConnection = async ( req, res ) => {
 
         if ( response.length > 0 ) {
             const tokensDoc = response[0]
-            console.log(tokensDoc.tokens);
+            const email = await getUserEmail( tokensDoc.tokens )
+            console.log(email);
             return res.json({ isConnected: true })
 
 
