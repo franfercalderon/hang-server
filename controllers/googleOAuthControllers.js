@@ -2,25 +2,27 @@ const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById } = require(
 const { generateAuthUrl, getTokens, addEvent, deleteEvent, } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = ( req, res ) => {
+    console.log(process.env.GOOGLE_CLIENT_ID)
+    console.log(process.env.GOOGLE_CLIENT_SECRET)
+    console.log(process.env.GOOGLE_REDIRECT_URI)
     const url = generateAuthUrl()
     res.redirect( url )
 }
 
 const handleGoogleCallback = async ( req, res ) => {
 
-    console.log('llega');
     const { code } = req.query
-    console.log(code);
+
     try {
         const tokens = await getTokens( code )
-        console.log(tokens);
+        // console.log(tokens);
 
         //await SAVE TOKENS IN USER WITH USER ID
 
 
         ////REPLACE WITH ACTUAL DOMAIN LATER
         // res.redirect('https://gethangapp.com/settings/calendar');
-        res.redirect('https://hang-client.vercel.app/settings/calendar');
+        res.redirect('https://gethangapp.com/settings/calendar');
 
 
     } catch ( error ) {
