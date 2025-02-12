@@ -36,11 +36,11 @@ const handleGoogleCallback = async ( req, res ) => {
         const tokens = await getTokens( code )
         const tokenObjectForDb = {
             tokens: tokens,
-            userId: JSON.parse( state )
+            userId: JSON.parse( state.userId )
         }
         console.log(tokenObjectForDb);
 
-        const tokenDocId = await createDocumentInCollection('', tokenObjectForDb )
+        const tokenDocId = await createDocumentInCollection('calendarTokens', tokenObjectForDb )
         if ( tokenDocId ){
             res.redirect('https://gethangapp.com/settings/calendar');
         } else {
