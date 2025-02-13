@@ -31,10 +31,10 @@ const handleGoogleCallback = async ( req, res ) => {
 
     try {
 
+        const { code, state } = req.query
         if( !code || !state ){
             return res.status( 400 ).json({ message: 'Missing code or state in callback url' })
         } else {
-            const { code, state } = req.query
             const userIdObject = JSON.parse( state )
             const userId = userIdObject.userId
             const tokens = await getTokens( code )
