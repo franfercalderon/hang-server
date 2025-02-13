@@ -1,5 +1,5 @@
 const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection, decodeToken, updateDocumentProperties } = require('../services/firebaseServices')
-const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = require('../services/googleOAuthServices')
+const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail, getFreshAccessToken, handleAddEventToCalendar } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = async ( req, res ) => {
 
@@ -60,12 +60,29 @@ const handleGoogleCallback = async ( req, res ) => {
     }
 }
 
-const createCalendarEvent = async ( req, res ) => {
+const createCalendarEvent = async ( userId,  ) => {
     try {
         // const tokens = GET TOKENS FROM USER DB 
         const event = req.body
         const response = await addEvent( tokens, event )
         res.status( 201 ).json( response )
+        
+    } catch ( error ) {
+        console.error( 'Add Event Error:', error );
+        res.status( 500 ).send( 'Failed to add the event.' );
+    }
+}
+
+const handleCalendarEvents = async ( userId, event ) => {
+
+    try {
+        const userResponse = await getDocsWhereCondition('users', 'id', userId )
+        if( userResponse.length > 0 ){
+            const user = userResponse[0]
+            if( user.googleCalendarConnected ){
+                await handleAddEventToCalendar( userId, event )
+            }
+        }
         
     } catch ( error ) {
         console.error( 'Add Event Error:', error );
@@ -134,6 +151,7 @@ module.exports = {
     createCalendarEvent,
     deleteCalendarEvent,
     checkCalendarConnection,
-    disconnectCalendar
+    disconnectCalendar,
+    handleCalendarEvents
 
 }

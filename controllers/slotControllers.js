@@ -2,6 +2,7 @@ const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition
 const { v4 } = require('uuid') 
 const { handleNotifications } = require("./notificationControllers")
 const moment = require('moment-timezone');
+const { handleCalendarEvents } = require("./googleOAuthControllers");
 
 
 const formatTimestampToDate = ( timestamp, timezone = 'America/Chicago'  )  => {
@@ -84,17 +85,24 @@ const postAvailableNowSlot = async ( req, res ) => {
 const postScheduledSlot = async ( req, res ) => {
     try {
         const data = req.body
+        const userId = req.user.uid
         if( !data || Object.keys( data ).length === 0 ) {
             return res.status( 400 ).json( { message: 'Slot data is required in request body.' } ) 
         }
         const slot = {
             ...data,
-            userId: req.user.uid,
+            userId: userId,
             id: v4()
         }
         const docId = await createDocumentInCollection( 'scheduledSlots', slot )
         if( docId ) {
             res.status( 201 ).json( docId )
+
+            handleCalendarEvents( userId, slot ).catch( error => {
+
+                console.error( 'Error executing handleCalendarEvents:', error )
+            })
+
             if( slot.isPrivate ){
 
                 handlePrivateEvent( slot, 'scheduledSlots' ).catch( error => {
@@ -473,6 +481,7 @@ const getFixedMatches = async ( req, res ) => {
 
 const handlePrivateEvent = async ( event, collection ) => {
     try {
+        console.log('ladygaga handlePrivateEvent');
 
         if( event.visibility === 'auto'){
 
