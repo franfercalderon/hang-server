@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const { getDocsWhereCondition } = require('./firebaseServices');
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
