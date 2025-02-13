@@ -1,4 +1,4 @@
-const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection, decodeToken } = require('../services/firebaseServices')
+const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection, decodeToken, updateDocumentProperties } = require('../services/firebaseServices')
 const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = async ( req, res ) => {
@@ -26,7 +26,6 @@ const redirectToGoogle = async ( req, res ) => {
 
 const handleGoogleCallback = async ( req, res ) => {
 
-
     try {
 
         const { code, state } = req.query
@@ -42,7 +41,13 @@ const handleGoogleCallback = async ( req, res ) => {
             }
     
             const tokenDocId = await createDocumentInCollection('calendarTokens', tokenObjectForDb )
+
             if ( tokenDocId ){
+
+                const data = { googleCalendarConnected: true  }
+                const userDocId = await getDocIdWithCondition( 'users', 'id', userId )
+
+                await updateDocumentProperties('users', userDocId, data )
                 res.redirect('https://gethangapp.com/settings/calendar?calendarConnected=true');
             } else {
                 res.status( 400 ).json({ message: 'Could not store tokens in database' })
@@ -73,7 +78,7 @@ const deleteCalendarEvent = async ( req, res ) => {
     try {
         // const tokens = GET TOKENS FROM USER DB 
         const eventId = req.params.eventId
-        await deleteEvent( tokens, eventId)
+        await deleteEvent( tokens, eventId )
         res.status( 200 ).json( { message: 'Event Deleted' } )
         
     } catch ( error ) {
@@ -92,6 +97,7 @@ const checkCalendarConnection = async ( req, res ) => {
         const response = await getDocsWhereCondition( "calendarTokens", "userId", userId )
 
         if ( response.length > 0 ) {
+
             return res.json({ isConnected: true })
             
             // const tokensDoc = response[0]
@@ -114,6 +120,8 @@ const disconnectCalendar = async ( req, res ) => {
         const userId = req.user.uid
         const docId = await getDocIdWithCondition('calendarTokens', 'userId', userId )
         await deleteDocById('calendarTokens', docId )
+        const data = { googleCalendarConnected: false  }
+        await updateDocumentProperties('users', docId, data )
         res.status( 200 ).json({ message: 'Calendar disconnected '})
     } catch ( error ) {
         res.status( 500 ).json({ message: 'Could not check connection.'})

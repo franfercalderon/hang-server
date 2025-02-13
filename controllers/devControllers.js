@@ -41,25 +41,35 @@ const addPropertyToDocs = async ( req, res ) => {
         //     ends: 1738371600000,
         // }
 
-        const rawDate = new Date( 1738368000000 )
-        const formattedStart = converTimestampToString( 1738368000000 )
-        // const formattedEnd = converTimestampToString( event.ends )
+        // const rawDate = new Date( 1738368000000 )
+        // const formattedStart = converTimestampToString( 1738368000000 )
+        // // const formattedEnd = converTimestampToString( event.ends )
 
-        const formattedDate = formatTimestampToDate( 1738368000000 )
+        // const formattedDate = formatTimestampToDate( 1738368000000 )
 
-        console.log( 'Raw Date ', rawDate);
-        console.log('Formatted ', `${formattedDate} at ${formattedStart}.` );
+        // console.log( 'Raw Date ', rawDate);
+        // console.log('Formatted ', `${formattedDate} at ${formattedStart}.` );
 
-        res.status( 200 ).json( {message: 'Ok'} )
+        // res.status( 200 ).json( {message: 'Ok'} )
 
+        const users = await getAllDocsFromCollection('users')
+        if( users.length > 0 ){
 
-        // const users = await getAllDocsFromCollection('users')
+            for (const user of users){
+                const docId = await getDocIdWithCondition('users', 'id', user.id)
+                if( docId){
+                    const data = { googleCalendarConnected: false  }
+                    await updateDocumentProperties('users', docId, data )
+                    console.log('Added Property to: ', docId);
+                } else {
+                    return res.status( 400 ).json({message: 'No userId'})
+                }
+            }
 
-        // if( users.length > 0 ){
-        //     res.status( 200 ).json( users )
-        // } else {
-        //     res.status( 400 ).json( { message: 'No users'} )
-        // }
+            res.status( 200 ).json( {message: 'Added property'} )
+        } else {
+            res.status( 400 ).json( { message: 'No users'} )
+        }
         // const darby = await getDocAndIdWithCondition('users', 'id', 'V20Lf5TIOrN0LVRLkzUBPQVmXnM2')
         // if( darby ){
         //      res.status( 200 ).json( darby )
