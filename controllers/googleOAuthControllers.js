@@ -10,12 +10,10 @@ const redirectToGoogle = async ( req, res ) => {
         } else {
             const decodedToken = await decodeToken( authToken )
             const userId = decodedToken.uid
-            console.log(userId);
             const url = generateAuthUrl({
                 state: JSON.stringify({ userId }) 
             });            
             
-            console.log(url);
             res.redirect( url )
         }
         
@@ -42,11 +40,10 @@ const handleGoogleCallback = async ( req, res ) => {
                 tokens: tokens,
                 userId: userId
             }
-            console.log(tokenObjectForDb);
     
             const tokenDocId = await createDocumentInCollection('calendarTokens', tokenObjectForDb )
             if ( tokenDocId ){
-                res.redirect('https://gethangapp.com/settings/calendar');
+                res.redirect('https://gethangapp.com/settings/calendar?calendarConnected=true');
             } else {
                 res.status( 400 ).json({ message: 'Could not store tokens in database' })
             }
