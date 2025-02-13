@@ -39,12 +39,13 @@ async function getFreshAccessToken( userId ) {
         const response = await getDocsWhereCondition( "calendarTokens", "userId", userId )
         if( response.length > 0 ){
             const tokensDoc = response[0]
-            if (!tokensDoc || !tokensDoc.refresh_token) {
+            console.log(tokensDoc);
+            if (!tokensDoc || !tokensDoc.tokens.refresh_token) {
                 throw new Error("No refresh token available");
             }
-            // oauth2Client.setCredentials({
-            //     refresh_token: tokensDoc.refresh_token
-            // });
+            oauth2Client.setCredentials({
+                refresh_token: tokensDoc.tokens.refresh_token
+            });
 
             const { credentials } = await oauth2Client.refreshAccessToken()
             return credentials.access_token
@@ -70,7 +71,7 @@ async function handleAddEventToCalendar( userId, event ) {
     try {
         const accessToken = await getFreshAccessToken( userId )
         if ( accessToken ){
-            oauth2Client.setCredentials({ access_token: accessToken });
+            // oauth2Client.setCredentials({ access_token: accessToken });
             const calendar = google.calendar({ version: 'v3' })
             const response = await calendar.events.insert({
                 auth: oauth2Client,
