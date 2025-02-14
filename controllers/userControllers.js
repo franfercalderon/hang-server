@@ -221,8 +221,7 @@ const postFCMToken = async ( req, res ) => {
     
         //CHECKS EXISTING TOKENS FOR USER:
         const userTokensDoc = await getDocsWhereCondition( 'FCMTokens', 'userId', userId )
-        console.log(userTokensDoc);
-        console.log('ladygaga ',userTokensDoc.length )
+     
         if( userTokensDoc.length > 0 ){
             const docId = await getDocIdWithCondition('FCMTokens', 'userId', userId )
             if( docId ){

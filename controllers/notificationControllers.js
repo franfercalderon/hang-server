@@ -1,7 +1,9 @@
+const { response } = require("express")
 const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition, deleteDocById, updateDocArrayById, updateDocumentProperties } = require("../services/firebaseServices")
 const { sendEmail } = require("../services/sendgridServices")
 const { sendText } = require("../services/twillioServices")
 const { v4 } = require('uuid') 
+const { sendPushNotification } = require("../services/pushNotificationServices")
 
 const handleNotifications = async ( sender, receiverId, message, appNotification ) => {
     try {
@@ -149,11 +151,46 @@ const updateNotificationPreferences = async ( req, res ) => {
     }
 }
 
+const testPushNotification = async ( req, res ) => {
+    try {
+
+        const userId = req.user.uid
+        console.log(user);
+        if( !userId ){
+            res.status( 400 ).json( { message: 'userId missing in auth object.' } )
+        }
+        const tokensDoc = await getDocsWhereCondition( 'FCMTokens', 'userId', userId )
+
+        if( tokensDoc.length > 0 ){
+            const tokenArray = tokensDoc.tokens 
+
+            const message = {
+                notification: {
+                    title: `Hi ${'NAME'}`,
+                    body: 'This is your test notification'
+                },
+                tokens: tokenArray
+            }
+
+            const response = await sendPushNotification( message )
+            if( response ){
+                res.status( 200 ).json( response )
+            } else {
+                res.status( 400 ).json({ message: 'Could not send notifications'} )
+            }
+        }
+        
+    } catch (error) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Internal server error.' } )
+    }
+}
  
-module.exports = {
+module.exports = { 
     handleNotifications,
     getUserNotifications,
     deleteNotification,
     handleExternalNotifications,
-    updateNotificationPreferences
+    updateNotificationPreferences,
+    testPushNotification
 }
