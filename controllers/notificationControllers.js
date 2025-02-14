@@ -159,6 +159,15 @@ const testPushNotification = async ( req, res ) => {
         if( !userId ){
             res.status( 400 ).json( { message: 'userId missing in auth object.' } )
         }
+        let userName = ''
+        const userDoc = await getDocsWhereCondition('users', 'id', userId )
+        if( userDoc.length > 0){
+            const user = userDoc[0]
+            userName = user.name
+        } else {
+            userName = 'User'
+        }
+
         const tokensDoc = await getDocsWhereCondition( 'FCMTokens', 'userId', userId )
 
         if( tokensDoc.length > 0 ){
@@ -166,7 +175,7 @@ const testPushNotification = async ( req, res ) => {
 
             const message = {
                 notification: {
-                    title: `Hi ${'NAME'}`,
+                    title: `Hi ${userName}!`,
                     body: 'This is your test notification'
                 },
                 tokens: tokenArray
