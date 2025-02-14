@@ -2,7 +2,7 @@ const { admin  } = require( '../firebase' )
 
 const sendPushNotification = async ( message ) => {
     try {
-        const response = await admin.messaging().sendMulticast( message )
+        const response = await admin.messaging().sendEachForMulticast( message )
         return response
 
     } catch ( error ) {

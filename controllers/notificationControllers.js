@@ -155,11 +155,10 @@ const testPushNotification = async ( req, res ) => {
     try {
 
         const userId = req.user.uid
-        console.log(req.user);
         if( !userId ){
             res.status( 400 ).json( { message: 'userId missing in auth object.' } )
         }
-        let userName = ''
+        let userName
         const userDoc = await getDocsWhereCondition('users', 'id', userId )
         if( userDoc.length > 0){
             const user = userDoc[0]
