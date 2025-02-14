@@ -155,7 +155,7 @@ const testPushNotification = async ( req, res ) => {
     try {
 
         const userId = req.user.uid
-        console.log(user);
+        console.log(req.user);
         if( !userId ){
             res.status( 400 ).json( { message: 'userId missing in auth object.' } )
         }
