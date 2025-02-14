@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { handleInvitedUser, updateUser, getUser, updateUserWithAuth, acceptInvitation } = require("../controllers/userControllers")
+const { handleInvitedUser, updateUser, getUser, updateUserWithAuth, acceptInvitation, postFCMToken } = require("../controllers/userControllers")
 const { getFriendSuggestions } = require( "../controllers/friendControllers" )
 const invite = require('../middleware/invite')
 const auth = require('../middleware/auth')
