@@ -170,7 +170,7 @@ const testPushNotification = async ( req, res ) => {
         const tokensDoc = await getDocsWhereCondition( 'FCMTokens', 'userId', userId )
 
         if( tokensDoc.length > 0 ){
-            const tokenArray = tokensDoc.tokens 
+            const tokenArray = tokensDoc[0].tokens 
 
             const message = {
                 notification: {
