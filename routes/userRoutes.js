@@ -13,6 +13,7 @@ router.get('/explore', auth, getFriendSuggestions )
 //POST
 router.post('/', masterUser, invite, handleInvitedUser )
 router.post('/acceptInvite/:friendId', auth, acceptInvitation )
+router.post('/FCMToken', auth, postFCMToken )
 
 
 //PATCH

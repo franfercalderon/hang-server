@@ -1,4 +1,4 @@
-const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, updateUserClaims, getDocAndIdWithCondition } = require("../services/firebaseServices")
+const { createDocumentInCollection, updateDocumentProperties, getDocsWhereCondition, getDocIdWithCondition, updateUserClaims, getDocAndIdWithCondition, updateDocArrayById } = require("../services/firebaseServices")
 
 const handleInvitedUser = async ( req, res ) => {
 
@@ -205,6 +205,43 @@ const acceptInvitation = async ( req, res ) => {
     }
 } 
 
+const postFCMToken = async ( req, res ) => {
+
+    try {
+        const userId = req.user.uid
+        const data = req.body
+        const newToken = data.FCMToken
+    
+        if( !userId ){
+            res.status( 400 ).json( { message: 'userId missing in auth object.' } )
+        }
+        if( !data ){
+            res.status( 400 ).json( { message: 'FCM token missing in requeest body' } )
+        }
+    
+        //CHECKS EXISTING TOKENS FOR USER:
+        const userTokensDoc = getDocsWhereCondition( 'FCMTokens', 'userId', userId )
+        if( userTokensDoc.length > 0 ){
+            const docId = await getDocIdWithCondition('FCMTokens', 'userId', userId )
+            if( docId ){
+                await updateDocArrayById('FCMTokens', docId, 'tokens', newToken )
+                res.status( 201 ).json({ message: 'Tokens stored!' })
+            }
+        } else {
+            const newDoc = {
+                userId: userId,
+                tokens: [ newToken ]
+            }
+            await createDocumentInCollection('FCMTokens', newDoc )
+            res.status( 201 ).json({ message: 'Tokens stored!' })
+        }
+    } catch ( error ) {
+        console.error( error )
+        res.status( 500 ).json( { message: 'Internal server error.' } )
+    }
+
+}
+
 module.exports = {
     handleMasterUser,
     handleInvitedUser,
@@ -212,4 +249,5 @@ module.exports = {
     updateUser,
     updateUserWithAuth,
     acceptInvitation,
+    postFCMToken
 }
