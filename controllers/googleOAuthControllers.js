@@ -25,6 +25,7 @@ const redirectToGoogle = async ( req, res ) => {
 }
 
 const handleGoogleCallback = async ( req, res ) => {
+    console.log('lady gaga: handleGoogleCallback');
 
     try {
 
