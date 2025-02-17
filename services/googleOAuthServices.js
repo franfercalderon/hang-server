@@ -11,11 +11,14 @@ const SCOPES = [ 'https://www.googleapis.com/auth/calendar.events.owned' ]
 
 function generateAuthUrl( options ) {
 
+    const redirectUri = 'https://api.gethangapp.com/calendarAPI/auth/google/callback';
+
     return oauth2Client.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
         scope: SCOPES,
-        state: options.state
+        state: options.state,
+        redirect_uri: redirectUri
     });
 }
 

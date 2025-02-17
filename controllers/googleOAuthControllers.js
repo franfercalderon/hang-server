@@ -6,7 +6,7 @@ const redirectToGoogle = async ( req, res ) => {
     try {
         const authToken = req.query.authToken
         if( !authToken){
-            res.status( 400 ).json({ message: 'Could not find auth token'})
+            res.status( 400 ).json({ message: 'Could not find auth token'}) 
         } else {
             const decodedToken = await decodeToken( authToken )
             const userId = decodedToken.uid

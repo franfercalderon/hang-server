@@ -110,7 +110,7 @@ app.options('*', cors(corsOptions));
 //     res.sendStatus(204); 
 // });
 
-app.use(express.json());
+app.use(express.json()); 
 
 // ROUTES
 const userRoutes = require('./routes/userRoutes');
