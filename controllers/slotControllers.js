@@ -938,7 +938,7 @@ const deleteEvent = async ( req, res ) => {
         await deleteDocById( collection, docId )
         res.status( 201 ).json( { message: 'Event deleted' } )
 
-            if( slot.googleEventId ){
+            if( data.googleEventId ){
                 deleteEventFromGoogleCalendar( userId, slot.googleEventId ).catch( error => {
     
                     console.error( 'Error executing deleteEventFromGoogleCalendar:', error )
