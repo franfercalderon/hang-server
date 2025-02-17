@@ -939,7 +939,7 @@ const deleteEvent = async ( req, res ) => {
         res.status( 201 ).json( { message: 'Event deleted' } )
 
             if( data.googleEventId ){
-                deleteEventFromGoogleCalendar( userId, slot.googleEventId ).catch( error => {
+                deleteEventFromGoogleCalendar( userId, data.googleEventId ).catch( error => {
     
                     console.error( 'Error executing deleteEventFromGoogleCalendar:', error )
                 })
