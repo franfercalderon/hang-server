@@ -96,19 +96,17 @@ const corsOptions = {
 };
 
 const app = express();
+app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+        return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+    next();
+});
+
 app.use(cors(corsOptions)); 
 
 app.options('*', cors(corsOptions)); 
 
-
-
-// app.options('*', (req, res) => {
-//     res.set('Access-Control-Allow-Origin', 'https://gethangapp.com');
-//     res.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-//     res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-//     res.set('Access-Control-Allow-Credentials', 'true');
-//     res.sendStatus(204); 
-// });
 
 app.use(express.json()); 
 
