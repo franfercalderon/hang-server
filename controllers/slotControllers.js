@@ -98,7 +98,7 @@ const postScheduledSlot = async ( req, res ) => {
         if( docId ) {
             res.status( 201 ).json( docId )
 
-            handleCalendarEvents( userId, slot ).catch( error => {
+            handleCalendarEvents( userId, slot, docId ).catch( error => {
 
                 console.error( 'Error executing handleCalendarEvents:', error )
             })
