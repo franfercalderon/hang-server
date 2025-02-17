@@ -3,6 +3,7 @@ const { v4 } = require('uuid')
 const { handleNotifications } = require("./notificationControllers")
 const moment = require('moment-timezone');
 const { handleCalendarEvents } = require("./googleOAuthControllers");
+const { deleteEventFromGoogleCalendar } = require("../services/googleOAuthServices");
 
 
 const formatTimestampToDate = ( timestamp, timezone = 'America/Chicago'  )  => {
@@ -936,6 +937,14 @@ const deleteEvent = async ( req, res ) => {
         }
         await deleteDocById( collection, docId )
         res.status( 201 ).json( { message: 'Event deleted' } )
+
+            if( slot.googleEventId ){
+                deleteEventFromGoogleCalendar( userId, slot.googleEventId ).catch( error => {
+    
+                    console.error( 'Error executing deleteEventFromGoogleCalendar:', error )
+                })
+            }
+
 
             if( data.attending.length > 0 ){
                 const response = await getDocsWhereCondition('users', 'id', userId )

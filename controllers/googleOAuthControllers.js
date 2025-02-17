@@ -82,11 +82,8 @@ const handleCalendarEvents = async ( userId, event, eventDocId ) => {
             const user = userResponse[0]
             if( user.googleCalendarConnected ){
                 const response = await handleAddEventToCalendar( userId, event )
-                // console.log(response.data.);
-                console.log('ladygaga: ', eventDocId );
                 const data = { googleEventId: response.data.id }
                 await updateDocumentProperties('scheduledSlots', eventDocId, data )
-                // event.id is 
             }
         }
         

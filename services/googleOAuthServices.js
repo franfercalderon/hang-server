@@ -41,7 +41,6 @@ async function getFreshAccessToken( userId ) {
         const response = await getDocsWhereCondition( "calendarTokens", "userId", userId )
         if( response.length > 0 ){
             const tokensDoc = response[0]
-            console.log(tokensDoc);
             if (!tokensDoc || !tokensDoc.tokens.refresh_token) {
                 throw new Error("No refresh token available");
             }
@@ -73,7 +72,6 @@ async function handleAddEventToCalendar( userId, event ) {
     try {
         const accessToken = await getFreshAccessToken( userId )
         if ( accessToken ){
-            // oauth2Client.setCredentials({ access_token: accessToken });
             const calendar = google.calendar({ version: 'v3' })
             const response = await calendar.events.insert({
                 auth: oauth2Client,
@@ -100,36 +98,32 @@ async function handleAddEventToCalendar( userId, event ) {
     }
 }
 
-// async function addEvent( userId, eventData ) {
-//     const auth = setCredentials( tokens );
-//     const calendar = google.calendar({ version: 'v3', auth });
+async function deleteEventFromGoogleCalendar( userId, eventId ) {
+    // const auth = setCredentials( tokens );
+    // const calendar = google.calendar({ version: 'v3', auth });
 
-//     const event = {
-//         summary: eventData.summary,
-//         description: eventData.description,
-//         start: { dateTime: eventData.start },
-//         end: { dateTime: eventData.end },
-//     };
+    // await calendar.events.delete({
+    //     calendarId: 'primary',
+    //     eventId: eventId,
+    // });
 
-//     const response = await calendar.events.insert({
-//         calendarId: 'primary',
-//         resource: event,
-//     });
-
-//     return response.data;
-// }
-
-// curl -H "Authorization: Bearer ya29.a0AXeO80S61ipkTWJ9UVdH231JXXF3AMiFjZMRaSHpLGyNwtuEQdz6VqfHQxjKZ3qerceo9pDECHAkIkGKx391TSKwK3oHLu47vaoXEOccCiB9Z99shHpiBxPRWsc77y6IuSSuJvCASMMBItbi3wO6oOHTyvurrn1MS5kFiGNUaCgYKASUSARESFQHGX2MihSJn1-wjUA849aVuRhA-fQ0175" https://www.googleapis.com/oauth2/v2/userinfo
-
-
-async function deleteEvent( tokens, eventId ) {
-    const auth = setCredentials( tokens );
-    const calendar = google.calendar({ version: 'v3', auth });
-
-    await calendar.events.delete({
-        calendarId: 'primary',
-        eventId: eventId,
-    });
+    try {
+        const accessToken = await getFreshAccessToken( userId )
+        if ( accessToken ){
+            const calendar = google.calendar({ version: 'v3' })
+            await calendar.events.delete({
+                auth: oauth2Client,
+                calendarId: 'primary',
+                eventId
+            })
+            console.log('deleted lady gaga');
+            return 
+        } 
+        
+    } catch (error) {
+        console.error("Error in handleAddEventToCalendar:", error);
+        throw error;
+    }
 }
   
 
@@ -137,8 +131,7 @@ module.exports = {
     generateAuthUrl, 
     getTokens, 
     setCredentials, 
-    // addEvent, 
-    deleteEvent,
+    deleteEventFromGoogleCalendar,
     getUserEmail,
     getFreshAccessToken,
     handleAddEventToCalendar
