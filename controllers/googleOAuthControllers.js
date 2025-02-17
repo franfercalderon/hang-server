@@ -80,7 +80,8 @@ const handleCalendarEvents = async ( userId, event ) => {
         if( userResponse.length > 0 ){
             const user = userResponse[0]
             if( user.googleCalendarConnected ){
-                await handleAddEventToCalendar( userId, event )
+                const response = await handleAddEventToCalendar( userId, event )
+                console.log(response);
             }
         }
         
