@@ -616,8 +616,12 @@ const handleInviteResponse = async ( req, res ) => {
     if( !userData || !collection ){
         return res.status( 400 ).json( 'Data missing in request body' )
     }
-    
+    console.log('collection: ', collection);
+    console.log('eventId: ', eventId);
+
     const { data, docId } = await getDocAndIdWithCondition( collection, 'id', eventId )
+    console.log(data);
+    console.log(docId);
     const inviterId = data.userId
 
     let poolResponse
