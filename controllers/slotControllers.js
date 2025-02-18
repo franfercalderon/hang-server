@@ -487,9 +487,6 @@ const getFixedMatches = async ( req, res ) => {
 
 const handlePrivateEvent = async ( event, collection ) => {
     try {
-        console.log('llega a handlePrivateEvent');
-
-        console.log('event.visibility: ', event.visibility);
 
         if( event.visibility === 'auto'){
 
@@ -502,8 +499,6 @@ const handlePrivateEvent = async ( event, collection ) => {
                 event,
                 sortedMatches,
             }
-
-            console.log('data for invitePool: ', data);
     
             const poolId = await createDocumentInCollection( 'invitePool' , data )
     
@@ -622,14 +617,9 @@ const handleInviteResponse = async ( req, res ) => {
     if( !userData || !collection ){
         return res.status( 400 ).json( 'Data missing in request body' )
     }
-    console.log('collection: ', collection);
-    console.log('eventId: ', eventId);
 
     const { data, docId } = await getDocAndIdWithCondition( collection, 'id', eventId )
-    // const resposne = await getDocsWhereCondition( collection, 'id', eventId )
-    // console.log(resposne);
-    console.log(data);
-    console.log(docId);
+
     const inviterId = data.userId
 
     let poolResponse
