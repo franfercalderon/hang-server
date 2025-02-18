@@ -487,6 +487,9 @@ const getFixedMatches = async ( req, res ) => {
 
 const handlePrivateEvent = async ( event, collection ) => {
     try {
+        console.log('llega a handlePrivateEvent');
+
+        console.log('event.visibility: ', event.visibility);
 
         if( event.visibility === 'auto'){
 
@@ -499,6 +502,8 @@ const handlePrivateEvent = async ( event, collection ) => {
                 event,
                 sortedMatches,
             }
+
+            console.log('data for invitePool: ', data);
     
             const poolId = await createDocumentInCollection( 'invitePool' , data )
     
