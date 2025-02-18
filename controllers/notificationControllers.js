@@ -152,18 +152,18 @@ const updateNotificationPreferences = async ( req, res ) => {
     }
 }
 
-const handlPushNotification = async ( userId, message ) => {
+const handlPushNotification = async ( userId, pushMessage ) => {
     try {
         console.log('arrives handlPushNotification');
         
-        if( userId && message.body && message.title ){
+        if( userId && pushMessage.body && pushMessage.title ){
             const tokensDoc = await getDocsWhereCondition( 'FCMTokens', 'userId', userId )
     
             if( tokensDoc.length > 0 ){
                 const tokenArray = tokensDoc[0].tokens 
     
                 const message = {
-                    notification: message,
+                    notification: pushMessage,
                     tokens: tokenArray
                 }
     
