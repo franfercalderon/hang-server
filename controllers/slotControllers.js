@@ -620,7 +620,7 @@ const handleInviteResponse = async ( req, res ) => {
     console.log('eventId: ', eventId);
 
     // const { data, docId } = await getDocAndIdWithCondition( collection, 'id', eventId )
-    const resposne = await getDocAndIdWithCondition( collection, 'id', eventId )
+    const resposne = await getDocsWhereCondition( collection, 'id', eventId )
     console.log(resposne);
     console.log(data);
     console.log(docId);
