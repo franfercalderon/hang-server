@@ -99,14 +99,7 @@ async function handleAddEventToCalendar( userId, event ) {
 }
 
 async function deleteEventFromGoogleCalendar( userId, eventId ) {
-    // const auth = setCredentials( tokens );
-    // const calendar = google.calendar({ version: 'v3', auth });
-
-    // await calendar.events.delete({
-    //     calendarId: 'primary',
-    //     eventId: eventId,
-    // });
-
+ 
     try {
         const accessToken = await getFreshAccessToken( userId )
         if ( accessToken ){
@@ -116,7 +109,6 @@ async function deleteEventFromGoogleCalendar( userId, eventId ) {
                 calendarId: 'primary',
                 eventId
             })
-            console.log('deleted lady gaga');
             return 
         } 
         

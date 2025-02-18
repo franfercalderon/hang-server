@@ -282,9 +282,13 @@ const addNewAttendant = async ( req, res ) => {
             url: '/notifications'
         }
 
-        // await handleNotifications( sender, data.userId, message, true )
+        const pushMessage = {
+            title: 'Someone Joined Your Hang!',
+            body: `${ user.name } ${ user.lastname } just joined ${ data.title ? `'${ data.title }'` : ''}. Get ready to Hang!`
+        }
+
         res.status( 200 ).json( { message: 'User added to event' } )
-        handleNotifications( sender, data.userId, message, true ).catch( error => {
+        handleNotifications( sender, data.userId, message, true, pushMessage ).catch( error => {
 
             console.error( 'Error executing handleNotifications:', error )
         })
@@ -482,7 +486,6 @@ const getFixedMatches = async ( req, res ) => {
 
 const handlePrivateEvent = async ( event, collection ) => {
     try {
-        console.log('ladygaga handlePrivateEvent');
 
         if( event.visibility === 'auto'){
 
@@ -534,11 +537,17 @@ const handlePrivateEvent = async ( event, collection ) => {
                 }
                 const message = {
                     system: false,
-                    text: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'an event'} at ${ event.location.address }. Date: ${ formatTimestampToDate( event.starts ) } from ${ converTimestampToString( event.starts ) } to ${ converTimestampToString( event.ends ) }.`,
-                    subject: 'Your friend is hosting an event you can attend!',
+                    text: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'a Hang'} at ${ event.location.address }. Date: ${ formatTimestampToDate( event.starts ) } from ${ converTimestampToString( event.starts ) } to ${ converTimestampToString( event.ends ) }.`,
+                    subject: 'Your friend is hosting a Hang you can attend!',
                     url: '/notifications'
                 }
-                await handleNotifications( sender, invitedId, message, false )
+
+                const pushMessage = {
+                    title: 'New Hang you can attend!',
+                    body: `${ event.userName } ${ event.userLastname } is organizing ${ event.title ? `'${ event.title }'` : 'a Hang'}.`
+                }
+
+                await handleNotifications( sender, invitedId, message, false, pushMessage )
     
             }
     
@@ -582,7 +591,12 @@ const handlePrivateEvent = async ( event, collection ) => {
                     subject: 'Your friend is inviting you to a Hang!',
                     url: '/notifications'
                 }
-                await handleNotifications( sender, friend.id, message, false )
+                const pushMessage = {
+                    title: `You're Invited to a New Hang!`,
+                    body: `${ event.userName } ${ event.userLastname } invited you to ${ event.title ? `'${ event.title }'` : 'a Hang'}.`
+                }
+
+                await handleNotifications( sender, friend.id, message, false, pushMessage )
 
             }
         }
@@ -661,8 +675,13 @@ const handleInviteResponse = async ( req, res ) => {
                 subject: `You have got company! Someone is attending your Hang`,
                 url:'/notifications',
             }
+
+            const pushMessage = {
+                title: `Someone Joined Your Hang!`,
+                body: `${ newAttendant.name } ${ newAttendant.lastname } has joined your ${ data.title ? `'${ data.title }'` : 'Hang'}.`
+            }
             
-            handleNotifications( sender, inviterId, message, true ).catch( error => {
+            handleNotifications( sender, inviterId, message, true, pushMessage ).catch( error => {
                 console.error( 'Error executing handleNotifications:', error )
             })
 
@@ -674,7 +693,12 @@ const handleInviteResponse = async ( req, res ) => {
                     subject: `Congratulations! Your ${ data.title } event is full.`,
                     url:'/notifications',
                 }
-                await handleNotifications( sender, inviterId, message1, true )
+                const pushMessageFull = {
+                    title: `Hang Full!`,
+                    body: `Your ${ data.title } has reached full capacity. Time to get the party started!.`
+                }
+
+                await handleNotifications( sender, inviterId, message1, true, pushMessageFull )
             }
 
         } else {
@@ -728,7 +752,13 @@ const handleInviteResponse = async ( req, res ) => {
                         subject: 'Your friend is inviting you to a Hang!',
                         url: '/notifications'
                     }
-                    await handleNotifications( sender, invite.invited.userId, message, false )
+
+                    const pushMessage = {
+                        title: `You're Invited to a New Hang!`,
+                        body: `${ invite.event.userName } ${ invite.event.userLastname } invited you to ${ data.title ? `'${ data.title }'` : 'a Hang'}.`
+                    } 
+
+                    await handleNotifications( sender, invite.invited.userId, message, false, pushMessage )
     
                     const updatedMatches = matches.map(item => item.friendSlot.userId === sortedPending[0].friendSlot.userId ? { ...item, friendSlot: { ...item.friendSlot, status: 'pending' } } : item )
     
@@ -955,11 +985,16 @@ const deleteEvent = async ( req, res ) => {
                         const message = {
 
                             system: false,
-                            text: `${ sender.name } ${ sender.lastname } has cancelled ${ data.title ? `'${ data.title }'` : 'their event'}, which was scheduled for ${ formatTimestampToDate( data.starts )} at ${ converTimestampToString( data.starts )}.`,
+                            text: `${ sender.name } ${ sender.lastname } has cancelled ${ data.title ? `'${ data.title }'` : 'their Hang'}, which was scheduled for ${ formatTimestampToDate( data.starts )} at ${ converTimestampToString( data.starts )}.`,
                             subject: 'A Hang has been cancelled',
                             url: '/notifications'
                         }
-                        await handleNotifications( sender, attendantId, message, true )
+                        const pushMessage = {
+                            title: `Attention: Hang Cancelled`,
+                            body: `Unfortunately ${ sender.name } ${ sender.lastname } has cancelled ${ data.title ? `'${ data.title }'` : 'their Hang'}.`
+                        }
+
+                        await handleNotifications( sender, attendantId, message, true, pushMessage )
                     }
                 }
             }
@@ -1072,7 +1107,13 @@ const updateEvent= async ( req, res ) => {
                     subject: 'Your friend is inviting you to a Hang!',
                     url: '/notifications'
                 }
-                await handleNotifications( sender, newFriend.id, message, false )
+
+                const pushMessage = {
+                    title: `You're Invited to a New Hang!`,
+                    body: `${ eventObject.data.userName } ${ eventObject.data.userLastname } invited you to ${ eventData.title && eventData.title !== '' ? eventData.title : eventObject.data.title}.`
+                } 
+
+                await handleNotifications( sender, newFriend.id, message, false, pushMessage )
             } 
 
         }
@@ -1092,7 +1133,11 @@ const updateEvent= async ( req, res ) => {
                     subject: 'Attention: A Hang you are attending has changed.',
                     url: '/events'
                 }
-                await handleNotifications( sender, attendant.userId, message, true )
+                const pushMessage = {
+                    title: `Attention: Hang Details Changed.`,
+                    body: `${ eventObject.data.title } has been updated. Check out new details in the app.`
+                }
+                await handleNotifications( sender, attendant.userId, message, true, pushMessage )
             }
         }
 

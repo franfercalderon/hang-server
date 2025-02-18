@@ -219,8 +219,13 @@ const replyFriendsRequest = async ( req, res ) => {
                 subject: `You have a new friend in Hang!`,
                 url:'/notifications',
             } 
+            const pushMessage = {
+                title: 'Friend Request Accepted!',
+                body: `${ invitedObject.data.name } ${ invitedObject.data.lastname } has accepted your friend request. Time to plan your next Hang!.`
+                
+            }
 
-            handleNotifications( sender, requesterId, message, true ).catch( error => {
+            handleNotifications( sender, requesterId, message, true, pushMessage ).catch( error => {
                 console.error( 'Error executing handleNotifications:', error )
             })
 

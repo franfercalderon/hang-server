@@ -5,7 +5,7 @@ const { sendText } = require("../services/twillioServices")
 const { v4 } = require('uuid') 
 const { sendPushNotification } = require("../services/pushNotificationServices")
 
-const handleNotifications = async ( sender, receiverId, message, appNotification ) => {
+const handleNotifications = async ( sender, receiverId, message, appNotification, pushMessage ) => {
     try {
 
         const timestamp = Date.now()
@@ -26,6 +26,7 @@ const handleNotifications = async ( sender, receiverId, message, appNotification
             if( appNotification ){
                 await createDocumentInCollection( 'notifications', notification )
             }
+            await handlPushNotification( receiverId, pushMessage )
             await handleExternalNotifications( receiver, message )
 
         }
@@ -151,6 +152,34 @@ const updateNotificationPreferences = async ( req, res ) => {
     }
 }
 
+const handlPushNotification = async ( userId, message ) => {
+    try {
+        
+        if( userId && message.body && message.title ){
+            const tokensDoc = await getDocsWhereCondition( 'FCMTokens', 'userId', userId )
+    
+            if( tokensDoc.length > 0 ){
+                const tokenArray = tokensDoc[0].tokens 
+    
+                const message = {
+                    notification: message,
+                    tokens: tokenArray
+                }
+    
+                const response = await sendPushNotification( message )
+                if( response ){
+                    console.log(`Notification sent to ${userId} in handlPushNotification`);
+                } else {
+                    console.error(`Could not send notificaton to ${userId} in handlPushNotification`);
+                }
+            }
+        }
+        
+    } catch ( error ) {
+        console.error( 'Error in handlPushNotification: ', error )
+    }
+}
+
 const testPushNotification = async ( req, res ) => {
     try {
 
@@ -193,6 +222,8 @@ const testPushNotification = async ( req, res ) => {
         res.status( 500 ).json( { message: 'Internal server error.' } )
     }
 }
+
+
  
 module.exports = { 
     handleNotifications,
