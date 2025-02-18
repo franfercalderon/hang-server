@@ -95,6 +95,7 @@ const postScheduledSlot = async ( req, res ) => {
             userId: userId,
             id: v4()
         }
+        console.log('ladygaga slotId: ',slot.id);
         const docId = await createDocumentInCollection( 'scheduledSlots', slot )
         if( docId ) {
             res.status( 201 ).json( docId )
