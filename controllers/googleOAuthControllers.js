@@ -183,7 +183,6 @@ const disconnectCalendar = async ( req, res ) => {
 module.exports = {
     handleGoogleCallback,
     redirectToGoogle,
-    createCalendarEvent,
     deleteCalendarEvent,
     checkCalendarConnection,
     disconnectCalendar,
