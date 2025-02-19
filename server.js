@@ -16,7 +16,7 @@ const corsOptions = {
         }
     },
     methods: 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
-    allowedHeaders: 'Content-Type,Authorization,mastertoken',
+    allowedHeaders: 'Content-Type,Authorization,mastertoken,inviteid',
     credentials: true 
 };
 
