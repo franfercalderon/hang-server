@@ -22,7 +22,11 @@ const handleInvitedUser = async ( req, res ) => {
             ...data,
             acceptedInvites: 0,
             friends: [ newFriend ],
-            master: false 
+            master: false,
+            notifications: {
+                text: false,
+                email: true
+            }
         }
 
         const newUserId = await createUser( user )
@@ -62,7 +66,7 @@ const acceptInvite = async ( req, res ) => {
     
 }
 
-const handleMasterUser = async ( req, res ) => {
+const handleMasterUser = async ( req, res ) => { 
 
     try {
         const data = req.body
@@ -73,7 +77,11 @@ const handleMasterUser = async ( req, res ) => {
             ...data,
             acceptedInvites: 0,
             friends: [],
-            master: true 
+            master: true,
+            notifications: {
+                text: false,
+                email: true
+            } 
         }
     
         const newUserId = await createUser( user )
