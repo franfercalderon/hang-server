@@ -5,7 +5,6 @@ const path = require('path');
 
 require('dotenv').config();
 
-// const allowedOrigins = ['https://gethangapp.com']; 
 const allowedOrigins = ['https://gethangapp.com', 'https://api.gethangapp.com'];
 
 

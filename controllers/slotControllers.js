@@ -2,7 +2,7 @@ const { createDocumentInCollection, getDocsWhereCondition, getDocIdWithCondition
 const { v4 } = require('uuid') 
 const { handleNotifications } = require("./notificationControllers")
 const moment = require('moment-timezone');
-const { handleCalendarEvents } = require("./googleOAuthControllers");
+const { handleAddCalendarEvents } = require("./googleOAuthControllers");
 const { deleteEventFromGoogleCalendar } = require("../services/googleOAuthServices");
 
 
@@ -95,14 +95,13 @@ const postScheduledSlot = async ( req, res ) => {
             userId: userId,
             id: v4()
         }
-        console.log('ladygaga slotId: ',slot.id);
         const docId = await createDocumentInCollection( 'scheduledSlots', slot )
         if( docId ) {
             res.status( 201 ).json( docId )
 
-            handleCalendarEvents( userId, slot, docId ).catch( error => {
+            handleAddCalendarEvents( userId, slot, docId ).catch( error => {
 
-                console.error( 'Error executing handleCalendarEvents:', error )
+                console.error( 'Error executing handleAddCalendarEvents:', error )
             })
 
             if( slot.isPrivate ){
@@ -649,6 +648,9 @@ const handleInviteResponse = async ( req, res ) => {
 
     if ( accepted ){
 
+        //ADDS TO JOINING USERS GOOGLE CALENDAR
+        const googleEventId = await handleAddCalendarEvents( invitedId, data, docId )
+
         //CONFIRMS SEAT IN EVENT
         const attending = data.attending
         const newAttendant = {
@@ -656,15 +658,17 @@ const handleInviteResponse = async ( req, res ) => {
             lastname: userData.lastname,
             userImg: userData.img,
             userId: invitedId,
+            googleEventId: googleEventId
         }
 
         if( attending.length < data.spots ){
 
             //ADDS USER TO EVENT
             await updateDocArrayById( collection, docId, 'attending', newAttendant )
+            console.log('lady gaga added to event: ', docId);
 
-            
             res.status( 200 ).json( 'User added to event' )
+
             //SENDS NOTIFICATIONS       
             const sender = {
                 imgUrl: userData.img,
@@ -1032,7 +1036,7 @@ const leaveEvent = async ( req, res ) => {
     }
 }
 
-const updateEvent= async ( req, res ) => {
+const updateEvent = async ( req, res ) => {
     try {
         const userId = req.user.uid
         const { eventData, eventId } = req.body

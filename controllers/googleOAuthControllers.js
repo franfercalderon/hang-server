@@ -1,4 +1,4 @@
-const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection, decodeToken, updateDocumentProperties } = require('../services/firebaseServices')
+const { getDocsWhereCondition, getDocIdWithCondition, deleteDocById, createDocumentInCollection, decodeToken, updateDocumentProperties, getDocAndIdWithCondition } = require('../services/firebaseServices')
 const { generateAuthUrl, getTokens, addEvent, deleteEvent, getUserEmail, getFreshAccessToken, handleAddEventToCalendar } = require('../services/googleOAuthServices')
 
 const redirectToGoogle = async ( req, res ) => {
@@ -25,7 +25,6 @@ const redirectToGoogle = async ( req, res ) => {
 }
 
 const handleGoogleCallback = async ( req, res ) => {
-    console.log('lady gaga: handleGoogleCallback');
 
     try {
 
@@ -61,42 +60,79 @@ const handleGoogleCallback = async ( req, res ) => {
     }
 }
 
-const createCalendarEvent = async ( userId,  ) => {
-    try {
-        // const tokens = GET TOKENS FROM USER DB 
-        const event = req.body
-        const response = await addEvent( tokens, event )
-        res.status( 201 ).json( response )
+// const createCalendarEvent = async ( userId,  ) => {
+//     try {
+//         // const tokens = GET TOKENS FROM USER DB 
+//         const event = req.body
+//         const response = await addEvent( tokens, event )
+//         res.status( 201 ).json( response )
         
-    } catch ( error ) {
-        console.error( 'Add Event Error:', error );
-        res.status( 500 ).send( 'Failed to add the event.' );
-    }
-}
+//     } catch ( error ) {
+//         console.error( 'Add Event Error:', error );
+//         res.status( 500 ).send( 'Failed to add the event.' )
+//     }
+// }
 
-const handleCalendarEvents = async ( userId, event, eventDocId ) => {
+const handleAddCalendarEvents = async ( userId, event, eventDocId ) => {
 
     try {
-        const userResponse = await getDocsWhereCondition('users', 'id', userId )
+        const userResponse = await getDocsWhereCondition( 'users', 'id', userId )
         if( userResponse.length > 0 ){
             const user = userResponse[0]
             if( user.googleCalendarConnected ){
                 const response = await handleAddEventToCalendar( userId, event )
-                const data = { googleEventId: response.data.id }
-                await updateDocumentProperties('scheduledSlots', eventDocId, data )
+                const googleCalendarEventId = response.data.id
+                if( userId === event.userId ){
+                    console.log('lady gaga own event: ' , eventDocId );
+                    const data = { googleEventId: googleCalendarEventId }
+                    await updateDocumentProperties( 'scheduledSlots', eventDocId, data )
+                    return null
+                } else {
+                    console.log('lady gaga joined event: ' , eventDocId );
+                    return googleCalendarEventId
+                }
+            } else{
+                return null 
             }
         }
         
     } catch ( error ) {
         console.error( 'Add Event Error:', error );
-        res.status( 500 ).send( 'Failed to add the event.' );
     }
 }
+
+// const addAttendantGoogleCalendar = async ( userId, event, eventDocId ) => {
+
+//     try {
+//         if( userId && eventId ){
+//             const userResponse = await getDocsWhereCondition( 'users', 'id', userId )
+//             if( userResponse.length > 0 ){
+//                 const user = userResponse[0]
+//                 if( user.googleCalendarConnected ){
+//                     const response = await handleAddEventToCalendar( userId, event )
+//                     const data = { googleEventId: response.data.id }
+
+
+//                     // await updateDocumentProperties('scheduledSlots', eventDocId, data )
+//                 } else{
+//                     console.warn('User has not any Google Calendar Connection.')
+//                 }
+//             }
+
+//             const { data, docId } = await getDocAndIdWithCondition( 'scheduledSlots', 'id', eventId )
+//             if ( data && docId ){
+
+//             }
+//         }
+        
+//     } catch ( error ) {
+//         console.error( 'Add Event Error:', error );
+//     }
+// }
 
 const deleteCalendarEvent = async ( req, res ) => {
 
     try {
-        // const tokens = GET TOKENS FROM USER DB 
         const eventId = req.params.eventId
         await deleteEvent( tokens, eventId )
         res.status( 200 ).json( { message: 'Event Deleted' } )
@@ -119,10 +155,6 @@ const checkCalendarConnection = async ( req, res ) => {
         if ( response.length > 0 ) {
 
             return res.json({ isConnected: true })
-            
-            // const tokensDoc = response[0]
-            // const email = await getUserEmail( tokensDoc.tokens )
-            // console.log(email);
 
         } else{
             return res.json( { isConnected: false } )
@@ -155,6 +187,6 @@ module.exports = {
     deleteCalendarEvent,
     checkCalendarConnection,
     disconnectCalendar,
-    handleCalendarEvents
+    handleAddCalendarEvents
 
 }

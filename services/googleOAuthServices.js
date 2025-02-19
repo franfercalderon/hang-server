@@ -90,7 +90,9 @@ async function handleAddEventToCalendar( userId, event ) {
                 }
             })
             return response
-        } 
+        } else {
+            console.warn('Could not get Google Calendar API Access Token.')
+        }
         
     } catch (error) {
         console.error("Error in handleAddEventToCalendar:", error);
