@@ -126,7 +126,7 @@ app.use('/dev', devRoutes);
 app.use('/calendarAPI', calendarAPIRoutes);
 
 app.get('/', (req, res) => {
-    res.status(200).json({ message: 'Testo Bueno' });
+    res.status(200).json({ message: 'Hang Server Running' });
 });
 
 const PORT = process.env.PORT || 5000;
