@@ -234,12 +234,12 @@ const getScheduledSlots = async ( req, res ) => {
             const currentActivity = activity.filter( ( act ) => act.starts > currentTime )
             currentActivity.forEach((actu) => {
                 console.log(actu.attending);
-                console.log('userId: ', userId);
+                console.log('userId: ', typeof userId);
             })
             console.log('currentActivity: ',currentActivity);
             const filteredActivity = currentActivity.filter(( event ) => 
 
-                !event.attending.some(( user ) => user.userId === userId )
+                !event.attending?.some(( user ) => user.userId === userId )
             )
             console.log('filteredActivity: ',filteredActivity);
     
@@ -256,6 +256,31 @@ const getScheduledSlots = async ( req, res ) => {
         res.status( 500 ).json( { message: 'Internal server error.' } )
     }
 } 
+
+currentActivity = [
+    {
+        eventTitle: 'something',
+        attending: [
+            {
+                userId: 'smething222',
+                name: 'Pete'
+            },
+            {
+                userId: 'asasas',
+                name: 'Laura'
+            },
+        ]
+    },
+    {
+        eventTitle: 'Dinner',
+        attending: [
+            {
+                userId: 'asasas',
+                name: 'Anne'
+            },
+        ]
+    }
+]
 
 
 const addNewAttendant = async ( req, res ) => { 
