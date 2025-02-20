@@ -260,16 +260,24 @@ const addNewAttendant = async ( req, res ) => {
         const authUser = req.user
         const { docId, data } = req.event
         const collection = req.collection
+        
+        //ADD TO CALENDAR
+        const googleEventId = await handleAddCalendarEvents( authUser.uid, data, docId )
 
         const joiningUser = {
             userId: authUser.uid,
             userImg: user.imgUrl,
             name: user.name,
-            lastname: user.lastname
+            lastname: user.lastname,
+            googleEventId: googleEventId
         }
 
         await updateDocArrayById( collection, docId, 'attending', joiningUser )
 
+        res.status( 200 ).json( { message: 'User added to event' } )
+        
+        
+        //NOTIFICATIONS
         const sender = {
             imgUrl: user.imgUrl,
             name: user.name,
@@ -286,8 +294,6 @@ const addNewAttendant = async ( req, res ) => {
             title: 'Someone Joined Your Hang!',
             body: `${ user.name } ${ user.lastname } just joined ${ data.title ? `'${ data.title }'` : ''}. Get ready to Hang!`
         }
-
-        res.status( 200 ).json( { message: 'User added to event' } )
         handleNotifications( sender, data.userId, message, true, pushMessage ).catch( error => {
 
             console.error( 'Error executing handleNotifications:', error )
