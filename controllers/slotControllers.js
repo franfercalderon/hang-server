@@ -966,18 +966,33 @@ const getAttendingEvents = async ( req, res ) => {
 const handleDeleteEventFromCalendars = async ( userId, event ) => {
 
     try {
-        //DELETES FROM OWNER'S CALENDAR 
-        if( event.googleEventId ){
-            await deleteEventFromGoogleCalendar( userId, event.googleEventId )
-            console.log('deleted from owners calendar');
-        }
-        //CHECK ATTENDANTS. IF CALENDAR DELETE
-        if( data.attending?.length > 0 ){
-            for ( const attendant of data.attending ){
-                console.log(`${attendant.name} has calendar?: `, attendant.googleEventId);
-                if( attendant.googleEventId ){
-                    await deleteEventFromGoogleCalendar( userId, event.id )
-                    console.log('deleted from attendants calendar');
+
+        if( userId === event.userId ){
+            //DELETES EVENT FOR ALL USERS (OWNER AND ATTENDANTS)
+            if( event.googleEventId ){
+                //DELETES FROM OWNER'S CALENDAR 
+                await deleteEventFromGoogleCalendar( userId, event.googleEventId )
+                console.log('deleted from owners calendar');
+            }
+            if( data.attending?.length > 0 ){
+                //CHECK ATTENDANTS. IF CALENDAR DELETE
+                for ( const attendant of data.attending ){
+                    console.log(`${attendant.name} has calendar?: `, attendant.googleEventId);
+                    if( attendant.googleEventId ){
+                        await deleteEventFromGoogleCalendar( attendant.userId, attendant.googleEventId )
+                        console.log(`deleted from ${attendant.name} calendar`);
+                    }
+                }
+            }
+        } else {
+            //DELETES USER AS ATTENDANT FROM EVENT
+            if( data.attending?.length > 0 ){
+                const attendantObject = data.attending.find( item => item.userId === userId )
+                if( attendantObject && attendantObject.googleEventId ){
+                    await deleteEventFromGoogleCalendar( userId, attendantObject.googleEventId ) 
+                    console.log(`deleted from ${attendantObject.name} calendar`);
+                } else {
+                    console.log(`${attendantObject.name} has no calendar connected.`);
                 }
             }
         }
@@ -986,6 +1001,18 @@ const handleDeleteEventFromCalendars = async ( userId, event ) => {
         console.error("Error in handleAddEventToCalendar:", error);
     }
 }
+
+[
+    {
+        userId: 'asa313ajs',
+        googleEventId: 'jahsajs'
+    },
+    {
+        userId: 'aaasaq2313',
+        googleEventId: null
+    },
+
+]
 
 const deleteEvent = async ( req, res ) => {
     try {
@@ -997,13 +1024,6 @@ const deleteEvent = async ( req, res ) => {
         }
         await deleteDocById( collection, docId )
         res.status( 201 ).json( { message: 'Event deleted' } )
-
-            // if( data.googleEventId ){
-            //     deleteEventFromGoogleCalendar( userId, data.googleEventId ).catch( error => {
-                    
-            //         console.error( 'Error executing deleteEventFromGoogleCalendar:', error )
-            //     })
-            // }
 
             //DELETES EVENT FROM CALENDARS
             handleDeleteEventFromCalendars( userId, data ).catch( error => {
@@ -1058,6 +1078,12 @@ const leaveEvent = async ( req, res ) => {
             const updatedAttendants = attendants.filter(( attendant ) => attendant.userId !== userId )
             await replaceDocArrayById( collection, docId, 'attending', updatedAttendants )
             res.status( 201 ).json( { message: 'User removed' } )
+
+            //DELETES EVENT FROM CALENDARS
+            handleDeleteEventFromCalendars( userId, data ).catch( error => {
+                    
+                console.error( 'Error executing handleDeleteEventFromCalendars:', error )
+            })
         }
 
     } catch ( error ) {
