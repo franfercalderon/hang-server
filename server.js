@@ -67,7 +67,7 @@ const path = require('path');
 
 require('dotenv').config();
 
-const allowedOrigins = ['https://gethangapp.com', 'https://api.gethangapp.com'];
+const allowedOrigins = ['https://gethangapp.com', 'https://api.gethangapp.com', 'https://www.gethangapp.com', 'https://www.api.gethangapp.com'];
 
 const corsOptions = {
     origin: function (origin, callback) {
