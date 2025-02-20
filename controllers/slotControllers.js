@@ -232,32 +232,11 @@ const getScheduledSlots = async ( req, res ) => {
             }
             const currentTime = Date.now()
             const currentActivity = activity.filter( ( act ) => act.starts > currentTime )
-            // currentActivity.forEach((actu) => {
-            //     console.log(actu.attending);
-            //     console.log('userId: ', typeof userId);
-            // })
-            // currentActivity.forEach(event => {
-            //     console.log('Checking event:', event.eventTitle);
-            //     console.log('Attending:', event.attending);
-            //     console.log('UserId:', userId);
-            //     console.log('Found in attending:', event.attending?.some(user => String(user.userId) === String(userId)));
-            // });
-            
-            console.log('currentActivity: ',currentActivity.length);
+  
             const filteredActivity = currentActivity.filter(( event ) => 
 
                 !event.attending?.some(( user ) => String(user.userId) === String(userId) )
             )
-            console.log('filteredActivity: ',filteredActivity.length);
-
-            // const filteredActivity = currentActivity.reduce(( acc, event ) => {
-            //     if( !event.attending || !event.attending.some( user => String( user.userId ) === String( userId ))){
-            //         acc.push( event )
-            //     } else {
-            //         console.log('Removing event. User not found');
-            //     }
-            //     return acc
-            // }, [])
     
             if( filteredActivity ) {
                 res.status( 201 ).json( filteredActivity )
