@@ -83,12 +83,10 @@ const handleAddCalendarEvents = async ( userId, event, eventDocId ) => {
                 const response = await handleAddEventToCalendar( userId, event )
                 const googleCalendarEventId = response.data.id
                 if( userId === event.userId ){
-                    console.log('lady gaga own event: ' , eventDocId );
                     const data = { googleEventId: googleCalendarEventId }
                     await updateDocumentProperties( 'scheduledSlots', eventDocId, data )
                     return null
                 } else {
-                    console.log('lady gaga joined event: ' , eventDocId );
                     return googleCalendarEventId
                 }
             } else{
@@ -100,35 +98,6 @@ const handleAddCalendarEvents = async ( userId, event, eventDocId ) => {
         console.error( 'Add Event Error:', error );
     }
 }
-
-// const addAttendantGoogleCalendar = async ( userId, event, eventDocId ) => {
-
-//     try {
-//         if( userId && eventId ){
-//             const userResponse = await getDocsWhereCondition( 'users', 'id', userId )
-//             if( userResponse.length > 0 ){
-//                 const user = userResponse[0]
-//                 if( user.googleCalendarConnected ){
-//                     const response = await handleAddEventToCalendar( userId, event )
-//                     const data = { googleEventId: response.data.id }
-
-
-//                     // await updateDocumentProperties('scheduledSlots', eventDocId, data )
-//                 } else{
-//                     console.warn('User has not any Google Calendar Connection.')
-//                 }
-//             }
-
-//             const { data, docId } = await getDocAndIdWithCondition( 'scheduledSlots', 'id', eventId )
-//             if ( data && docId ){
-
-//             }
-//         }
-        
-//     } catch ( error ) {
-//         console.error( 'Add Event Error:', error );
-//     }
-// }
 
 const deleteCalendarEvent = async ( req, res ) => {
 

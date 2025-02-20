@@ -665,7 +665,6 @@ const handleInviteResponse = async ( req, res ) => {
 
             //ADDS USER TO EVENT
             await updateDocArrayById( collection, docId, 'attending', newAttendant )
-            console.log('lady gaga added to event: ', docId);
 
             res.status( 200 ).json( 'User added to event' )
 
@@ -972,15 +971,12 @@ const handleDeleteEventFromCalendars = async ( userId, event ) => {
             if( event.googleEventId ){
                 //DELETES FROM OWNER'S CALENDAR 
                 await deleteEventFromGoogleCalendar( userId, event.googleEventId )
-                console.log('deleted from owners calendar');
             }
             if( event.attending?.length > 0 ){
                 //CHECK ATTENDANTS. IF CALENDAR DELETE
                 for ( const attendant of event.attending ){
-                    console.log(`${attendant.name} has calendar?: `, attendant.googleEventId);
                     if( attendant.googleEventId ){
                         await deleteEventFromGoogleCalendar( attendant.userId, attendant.googleEventId )
-                        console.log(`deleted from ${attendant.name} calendar`);
                     }
                 }
             }
@@ -990,29 +986,15 @@ const handleDeleteEventFromCalendars = async ( userId, event ) => {
                 const attendantObject = event.attending.find( item => item.userId === userId )
                 if( attendantObject && attendantObject.googleEventId ){
                     await deleteEventFromGoogleCalendar( userId, attendantObject.googleEventId ) 
-                    console.log(`deleted from ${attendantObject.name} calendar`);
-                } else {
-                    console.log(`${attendantObject.name} has no calendar connected.`);
-                }
+                } 
             }
         }
 
     } catch ( error ) {
-        console.error("Error in handleAddEventToCalendar:", error);
+        console.error("Error in handleDeleteEventFromCalendars:", error);
     }
 }
 
-[
-    {
-        userId: 'asa313ajs',
-        googleEventId: 'jahsajs'
-    },
-    {
-        userId: 'aaasaq2313',
-        googleEventId: null
-    },
-
-]
 
 const deleteEvent = async ( req, res ) => {
     try {
@@ -1133,6 +1115,14 @@ const updateEvent = async ( req, res ) => {
         }
         res.status( 200 ).json( { message: 'Event Updated' })
 
+        //UPDATES CALENDARS IF NEEDED
+        if( eventData.starts || eventData.ends || eventData.location || eventData.title || eventData.description ){
+            console.log('run edit in calendar');
+            console.log(eventData);
+        }
+
+
+        //SENDS INVITES IF NEEDED
         if( eventData.customList && eventData.customList.length > 0 ){
 
             for( const newFriend of eventData.customList ){
