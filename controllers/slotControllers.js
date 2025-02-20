@@ -244,11 +244,20 @@ const getScheduledSlots = async ( req, res ) => {
             });
             
             // console.log('currentActivity: ',currentActivity);
-            const filteredActivity = currentActivity.filter(( event ) => 
+            // const filteredActivity = currentActivity.filter(( event ) => 
 
-                !event.attending?.some(( user ) => user.userId === userId )
-            )
+            //     !event.attending?.some(( user ) => user.userId === userId )
+            // )
             // console.log('filteredActivity: ',filteredActivity);
+
+            const filteredActivity = currentActivity.reduce(( acc, event ) => {
+                if( !event.attending || !event.attending.some( user => String( user.userId ) === String( userId ))){
+                    acc.push( event )
+                } else {
+                    console.log('Removing event. User not found');
+                }
+                return acc
+            }, [])
     
             if( filteredActivity ) {
                 res.status( 201 ).json( filteredActivity )
