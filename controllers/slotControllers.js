@@ -974,9 +974,9 @@ const handleDeleteEventFromCalendars = async ( userId, event ) => {
                 await deleteEventFromGoogleCalendar( userId, event.googleEventId )
                 console.log('deleted from owners calendar');
             }
-            if( data.attending?.length > 0 ){
+            if( event.attending?.length > 0 ){
                 //CHECK ATTENDANTS. IF CALENDAR DELETE
-                for ( const attendant of data.attending ){
+                for ( const attendant of event.attending ){
                     console.log(`${attendant.name} has calendar?: `, attendant.googleEventId);
                     if( attendant.googleEventId ){
                         await deleteEventFromGoogleCalendar( attendant.userId, attendant.googleEventId )
@@ -986,8 +986,8 @@ const handleDeleteEventFromCalendars = async ( userId, event ) => {
             }
         } else {
             //DELETES USER AS ATTENDANT FROM EVENT
-            if( data.attending?.length > 0 ){
-                const attendantObject = data.attending.find( item => item.userId === userId )
+            if( event.attending?.length > 0 ){
+                const attendantObject = event.attending.find( item => item.userId === userId )
                 if( attendantObject && attendantObject.googleEventId ){
                     await deleteEventFromGoogleCalendar( userId, attendantObject.googleEventId ) 
                     console.log(`deleted from ${attendantObject.name} calendar`);
