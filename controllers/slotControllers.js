@@ -232,11 +232,12 @@ const getScheduledSlots = async ( req, res ) => {
             }
             const currentTime = Date.now()
             const currentActivity = activity.filter( ( act ) => act.starts > currentTime )
-            
+            console.log('currentActivity: ',currentActivity);
             const filteredActivity = currentActivity.filter(( event ) => 
 
                 !event.attending.some(( user ) => user.userId === userId )
             )
+            console.log('filteredActivity: ',filteredActivity);
     
             if( filteredActivity ) {
                 res.status( 201 ).json( filteredActivity )
