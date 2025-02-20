@@ -102,7 +102,7 @@ async function handleAddEventToCalendar( userId, event ) {
 
 async function deleteEventFromGoogleCalendar( userId, eventId ) {
  
-    try {
+    try { 
         const accessToken = await getFreshAccessToken( userId )
         if ( accessToken ){
             const calendar = google.calendar({ version: 'v3' })

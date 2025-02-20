@@ -963,6 +963,30 @@ const getAttendingEvents = async ( req, res ) => {
     }
 }
 
+const handleDeleteEventFromCalendars = async ( userId, event ) => {
+
+    try {
+        //DELETES FROM OWNER'S CALENDAR 
+        if( event.googleEventId ){
+            await deleteEventFromGoogleCalendar( userId, event.googleEventId )
+            console.log('deleted from owners calendar');
+        }
+        //CHECK ATTENDANTS. IF CALENDAR DELETE
+        if( data.attending?.length > 0 ){
+            for ( const attendant of data.attending ){
+                console.log(`${attendant.name} has calendar?: `, attendant.googleEventId);
+                if( attendant.googleEventId ){
+                    await deleteEventFromGoogleCalendar( userId, event.id )
+                    console.log('deleted from attendants calendar');
+                }
+            }
+        }
+
+    } catch ( error ) {
+        console.error("Error in handleAddEventToCalendar:", error);
+    }
+}
+
 const deleteEvent = async ( req, res ) => {
     try {
         const userId = req.user.uid
@@ -974,14 +998,20 @@ const deleteEvent = async ( req, res ) => {
         await deleteDocById( collection, docId )
         res.status( 201 ).json( { message: 'Event deleted' } )
 
-            if( data.googleEventId ){
-                deleteEventFromGoogleCalendar( userId, data.googleEventId ).catch( error => {
-    
-                    console.error( 'Error executing deleteEventFromGoogleCalendar:', error )
-                })
-            }
+            // if( data.googleEventId ){
+            //     deleteEventFromGoogleCalendar( userId, data.googleEventId ).catch( error => {
+                    
+            //         console.error( 'Error executing deleteEventFromGoogleCalendar:', error )
+            //     })
+            // }
 
+            //DELETES EVENT FROM CALENDARS
+            handleDeleteEventFromCalendars( userId, data ).catch( error => {
+                    
+                console.error( 'Error executing handleDeleteEventFromCalendars:', error )
+            })
 
+            //NOTIFIES ATTENDANTS
             if( data.attending.length > 0 ){
                 const response = await getDocsWhereCondition('users', 'id', userId )
                 if( response.length > 0 ){
