@@ -232,6 +232,10 @@ const getScheduledSlots = async ( req, res ) => {
             }
             const currentTime = Date.now()
             const currentActivity = activity.filter( ( act ) => act.starts > currentTime )
+            currentActivity.forEach((actu) => {
+                console.log(actu.attending);
+                console.log('userId: ', userId);
+            })
             console.log('currentActivity: ',currentActivity);
             const filteredActivity = currentActivity.filter(( event ) => 
 
