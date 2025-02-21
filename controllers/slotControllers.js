@@ -1106,6 +1106,7 @@ const leaveEvent = async ( req, res ) => {
 }
 
 const handleEditEventInCalendars = async ( eventId ) => {
+    console.log('llega handleEditEventInCalendars');
     try {
         const eventResponse = getDocsWhereCondition('scheduledSlots', 'id', eventId )
         if( eventResponse.length > 0 ){
