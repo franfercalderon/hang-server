@@ -4,14 +4,14 @@ const { generateAuthUrl, getTokens, handleAddEventToCalendar } = require('../ser
 const redirectToGoogle = async ( req, res ) => {
 
     try {
-        const authToken = req.query.authToken
-        if( !authToken){
-            res.status( 400 ).json({ message: 'Could not find auth token'}) 
+        const { authToken, source } = req.query
+        if( !authToken || !source ){
+            res.status( 400 ).json({ message: 'Could not find auth token or source in url'}) 
         } else {
             const decodedToken = await decodeToken( authToken )
             const userId = decodedToken.uid
             const url = generateAuthUrl({
-                state: JSON.stringify({ userId }) 
+                state: JSON.stringify({ userId, source }) 
             });            
             
             res.redirect( url )
@@ -32,8 +32,8 @@ const handleGoogleCallback = async ( req, res ) => {
         if( !code || !state ){
             return res.status( 400 ).json({ message: 'Missing code or state in callback url' })
         } else {
-            const userIdObject = JSON.parse( state )
-            const userId = userIdObject.userId
+            const { userId, source } = JSON.parse( state )
+            // const userId = userIdObject.userId
             const tokens = await getTokens( code )
             const tokenObjectForDb = {
                 tokens: tokens,
@@ -48,7 +48,12 @@ const handleGoogleCallback = async ( req, res ) => {
                 const userDocId = await getDocIdWithCondition( 'users', 'id', userId )
 
                 await updateDocumentProperties('users', userDocId, data )
-                res.redirect('https://gethangapp.com/settings/calendar?calendarConnected=true');
+
+                const redirectUrl = source === 'onboarding' 
+                    ? 'https://gethangapp.com/onboarding?calendarConnected=true'
+                    : 'https://gethangapp.com/settings/calendar?calendarConnected=true'
+                res.redirect( redirectUrl );
+
             } else {
                 res.status( 400 ).json({ message: 'Could not store tokens in database' })
             }

@@ -1111,7 +1111,6 @@ const handleEditEventInCalendars = async ( eventId ) => {
         
         if( eventResponse.length > 0 ){
             const event = eventResponse[0]
-            console.log(event);
             const updatedEvent = {
                 title: event.title,
                 description: event.description? event.description : '',
@@ -1123,16 +1122,13 @@ const handleEditEventInCalendars = async ( eventId ) => {
             if ( event.googleEventId ){
                 //UPDATES OWNERS CALENDAR
                 await updateCalendarEvent( event.userId, event.googleEventId, updatedEvent )
-                console.log('Updated owner calendar.');
             } 
             if ( event.attending?.length > 0 ){
                 for ( const attendant of event.attending ){
                     if( attendant.googleEventId ){
                         await updateCalendarEvent( attendant.userId, attendant.googleEventId, updatedEvent )
-                        console.log('Updated attendant calendar.');
-                    } else {
-                        console.log('Attendand without calendar');
-                    }
+                    
+                    } 
                 }
             }
         }
