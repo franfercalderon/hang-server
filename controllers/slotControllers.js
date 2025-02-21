@@ -3,7 +3,7 @@ const { v4 } = require('uuid')
 const { handleNotifications } = require("./notificationControllers")
 const moment = require('moment-timezone');
 const { handleAddCalendarEvents } = require("./googleOAuthControllers");
-const { deleteEventFromGoogleCalendar } = require("../services/googleOAuthServices");
+const { deleteEventFromGoogleCalendar, updateCalendarEvent } = require("../services/googleOAuthServices");
 
 
 const formatTimestampToDate = ( timestamp, timezone = 'America/Chicago'  )  => {
@@ -1105,6 +1105,41 @@ const leaveEvent = async ( req, res ) => {
     }
 }
 
+const handleEditEventInCalendars = async ( eventId ) => {
+    try {
+        const eventResponse = getDocsWhereCondition('scheduledSlots', 'id', eventId )
+        if( eventResponse.length > 0 ){
+            const event = eventResponse[0]
+            const updatedEvent = {
+                title: event.title,
+                description: event.description? event.description : '',
+                location: event.location?.address || '',
+                starts: event.starts,
+                ends: event.ends
+            }
+
+            if ( event.googleEventId ){
+                //UPDATES OWNERS CALENDAR
+                await updateCalendarEvent( event.userId, event.googleEventId, updatedEvent )
+                console.log('Updated owner calendar.');
+            } 
+            if ( event.attending?.length > 0 ){
+                for ( const attendant of event.attending ){
+                    if( attendant.googleEventId ){
+                        await updateCalendarEvent( attendant.userId, attendant.googleEventId, updatedEvent )
+                        console.log('Updated attendant calendar.');
+                    } else {
+                        console.log('Attendand without calendar');
+                    }
+                }
+            }
+        }
+
+    } catch ( error ) {
+        console.error("Error in handleEditEventInCalendars:", error);
+    }
+}
+
 const updateEvent = async ( req, res ) => {
     try {
         const userId = req.user.uid
@@ -1148,8 +1183,11 @@ const updateEvent = async ( req, res ) => {
 
         //UPDATES CALENDARS IF NEEDED
         if( eventData.starts || eventData.ends || eventData.location || eventData.title || eventData.description ){
-            console.log('run edit in calendar');
-            console.log(eventData);
+    
+            handleEditEventInCalendars( eventId ).catch( error => {
+                    
+                console.error( 'Error executing handleEditEventInCalendars:', error )
+            })
         }
 
 

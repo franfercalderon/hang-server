@@ -100,6 +100,40 @@ async function handleAddEventToCalendar( userId, event ) {
     }
 }
 
+async function updateCalendarEvent( userId, eventCalendarId, updatedEvent ){
+
+    try {
+        const accessToken = await getFreshAccessToken( userId )
+        if (accessToken) {
+            const calendar = google.calendar({ version: 'v3' })
+            const response = await calendar.events.update({
+                auth: oauth2Client,
+                calendarId: 'primary',
+                eventId: eventCalendarId,
+                requestBody: {
+                    summary: updatedEvent.title,
+                    description: updatedEvent.description || undefined,
+                    location: updatedEvent.location?.address || undefined,
+                    colorId: '7',
+                    start: {
+                        dateTime: new Date( updatedEvent.starts ).toISOString(),
+                    },
+                    end: {
+                        dateTime: new Date( updatedEvent.ends ).toISOString(),
+                    }
+                }
+            })
+            return response
+        } else {
+            console.warn('Could not get Google Calendar API Access Token.')
+        }
+    } catch (error) {
+        console.error("Error in handleUpdateEventInCalendar:", error);
+        throw error;
+    }
+
+}
+
 async function deleteEventFromGoogleCalendar( userId, eventId ) {
  
     try { 
@@ -128,5 +162,6 @@ module.exports = {
     deleteEventFromGoogleCalendar,
     getUserEmail,
     getFreshAccessToken,
-    handleAddEventToCalendar
+    handleAddEventToCalendar,
+    updateCalendarEvent
 }
