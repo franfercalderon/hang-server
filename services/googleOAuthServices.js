@@ -101,6 +101,7 @@ async function handleAddEventToCalendar( userId, event ) {
 }
 
 async function updateCalendarEvent( userId, eventCalendarId, updatedEvent ){
+    console.log('llega a updateCalendarEvent');
 
     try {
         const accessToken = await getFreshAccessToken( userId )
@@ -123,6 +124,7 @@ async function updateCalendarEvent( userId, eventCalendarId, updatedEvent ){
                     }
                 }
             })
+            console.log(response);
             return response
         } else {
             console.warn('Could not get Google Calendar API Access Token.')

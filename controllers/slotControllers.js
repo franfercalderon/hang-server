@@ -1111,6 +1111,7 @@ const handleEditEventInCalendars = async ( eventId ) => {
         const eventResponse = getDocsWhereCondition('scheduledSlots', 'id', eventId )
         if( eventResponse.length > 0 ){
             const event = eventResponse[0]
+            console.log(event);
             const updatedEvent = {
                 title: event.title,
                 description: event.description? event.description : '',
